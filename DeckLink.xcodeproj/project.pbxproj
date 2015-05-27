@@ -31,6 +31,7 @@
 		5061EAF71B16582D003552DE /* DeckLinkDevice+Devices.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EAF51B16582D003552DE /* DeckLinkDevice+Devices.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5061EAF81B16582D003552DE /* DeckLinkDevice+Devices.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5061EAF61B16582D003552DE /* DeckLinkDevice+Devices.mm */; };
 		5061EAFA1B165CCE003552DE /* DeckLinkDeviceBrowserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5061EAF91B165CCE003552DE /* DeckLinkDeviceBrowserTests.m */; };
+		5061EB111B1667A5003552DE /* DeckLinkDeviceIODirection.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB101B166761003552DE /* DeckLinkDeviceIODirection.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +72,7 @@
 		5061EAF51B16582D003552DE /* DeckLinkDevice+Devices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "DeckLinkDevice+Devices.h"; sourceTree = "<group>"; };
 		5061EAF61B16582D003552DE /* DeckLinkDevice+Devices.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "DeckLinkDevice+Devices.mm"; sourceTree = "<group>"; };
 		5061EAF91B165CCE003552DE /* DeckLinkDeviceBrowserTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeckLinkDeviceBrowserTests.m; sourceTree = "<group>"; };
+		5061EB101B166761003552DE /* DeckLinkDeviceIODirection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeckLinkDeviceIODirection.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,8 +156,7 @@
 				5061EABA1B1641E7003552DE /* DeckLinkAPITypes.h */,
 				5061EABB1B1641E7003552DE /* DeckLinkAPIVersion.h */,
 			);
-			name = DeckLinkAPI;
-			path = DeckLinkSDK/Mac/include;
+			path = DeckLinkAPI;
 			sourceTree = "<group>";
 		};
 		5061EAEB1B16524F003552DE /* Internal */ = {
@@ -180,6 +181,7 @@
 		5061EAF11B16530A003552DE /* Device */ = {
 			isa = PBXGroup;
 			children = (
+				5061EB101B166761003552DE /* DeckLinkDeviceIODirection.h */,
 				5061EAEC1B1652F2003552DE /* DeckLinkDevice.h */,
 				5061EAED1B1652F2003552DE /* DeckLinkDevice.mm */,
 				5061EAF31B165423003552DE /* DeckLinkDevice+Creation.h */,
@@ -220,6 +222,7 @@
 				5061EACD1B1641E7003552DE /* DeckLinkAPIModes.h in Headers */,
 				5061EAC91B1641E7003552DE /* DeckLinkAPIDiscovery.h in Headers */,
 				5061EAE41B164E0A003552DE /* DeckLinkDeviceBrowser.h in Headers */,
+				5061EB111B1667A5003552DE /* DeckLinkDeviceIODirection.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -517,6 +520,7 @@
 				5061E95C1B164177003552DE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		5061E95D1B164177003552DE /* Build configuration list for PBXNativeTarget "DeckLinkTests" */ = {
 			isa = XCConfigurationList;
@@ -525,6 +529,7 @@
 				5061E95F1B164177003552DE /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

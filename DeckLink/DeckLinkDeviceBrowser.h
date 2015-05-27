@@ -1,24 +1,12 @@
 #import <Foundation/Foundation.h>
 
+#import "DeckLinkDeviceIODirection.h"
+
 
 extern NSString * const DeckLinkDeviceBrowserDidAddDeviceNotification;
 extern NSString * const DeckLinkDeviceBrowserDidRemoveDeviceNotification;
 
 extern NSString * const DeckLinkDeviceBrowserDeviceKey;
-
-
-typedef NS_OPTIONS(uint32_t, DeckLinkDeviceBrowserType)
-{
-	/**
-	 * Devices that support incoming data
-	 */
-	DeckLinkDeviceBrowserTypeCapture = 1 << 0,
-	
-	/**
-	 * Devices that support outgoing data
-	 */
-	DeckLinkDeviceBrowserTypePlayback = 1 << 1,
-};
 
 
 @class DeckLinkDevice;
@@ -38,7 +26,7 @@ typedef NS_OPTIONS(uint32_t, DeckLinkDeviceBrowserType)
 
 - (instancetype)init;
 
-- (instancetype)initWithType:(DeckLinkDeviceBrowserType)type NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithIODirection:(DeckLinkDeviceIODirection)direction NS_DESIGNATED_INITIALIZER;
 
 @property (nonatomic, weak) id<DeckLinkDeviceBrowserDelegate> delegate;
 

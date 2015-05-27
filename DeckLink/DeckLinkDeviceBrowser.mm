@@ -20,7 +20,7 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 @property (nonatomic, strong) NSMutableSet *devices;
 @property (nonatomic, strong) dispatch_queue_t devicesQueue;
 
-@property (nonatomic, assign) DeckLinkDeviceBrowserType type;
+@property (nonatomic, assign) DeckLinkDeviceIODirection direction;
 
 @end
 
@@ -29,19 +29,14 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 
 - (instancetype)init
 {
-	return [self initWithType:DeckLinkDeviceBrowserTypeCapture | DeckLinkDeviceBrowserTypePlayback];
+	return [self initWithIODirection:DeckLinkDeviceIODirectionCapture | DeckLinkDeviceIODirectionPlayback];
 }
 
-- (instancetype)initWithType:(DeckLinkDeviceBrowserType)type
+- (instancetype)initWithIODirection:(DeckLinkDeviceIODirection)direction;
 {
 	self = [super init];
 	if(self != nil)
 	{
-		self.type = type;
-		
-		self.devices = [NSMutableSet setWithCapacity:8];
-		self.devicesQueue = dispatch_queue_create("BDDLDeviceBrowserQueue", DISPATCH_QUEUE_SERIAL);
-		
 		discovery = CreateDeckLinkDiscoveryInstance();
 		if (discovery == NULL)
 		{
@@ -53,6 +48,11 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 		{
 			return nil;
 		}
+		
+		self.direction = direction;
+		
+		self.devices = [NSMutableSet set];
+		self.devicesQueue = dispatch_queue_create("DeckLinkDeviceBrowserQueue", DISPATCH_QUEUE_SERIAL);
 	}
 	return self;
 }
@@ -150,7 +150,7 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 - (void)didAddDeckLink:(IDeckLink *)deckLink
 {
 	dispatch_sync(self.devicesQueue, ^{
-		DeckLinkDeviceBrowserType type = self.type;
+		DeckLinkDeviceIODirection direction = self.direction;
 		
 		IDeckLinkAttributes *deckLinkAttributes = NULL;
 		if (deckLink->QueryInterface(IID_IDeckLinkAttributes, (void **)&deckLinkAttributes) != S_OK)
@@ -158,25 +158,25 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 			return;
 		}
 		
-		int64_t videoIOSupport = 0;
-		deckLinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &videoIOSupport);
+		int64_t support = 0;
+		deckLinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &support);
 		
 		BOOL match = NO;
-		if (videoIOSupport & bmdDeviceSupportsCapture && type & DeckLinkDeviceBrowserTypeCapture)
+		if (support & bmdDeviceSupportsCapture && direction & DeckLinkDeviceIODirectionCapture)
 		{
 			match = YES;
 		}
-		else if (videoIOSupport & bmdDeviceSupportsPlayback && type & DeckLinkDeviceBrowserTypePlayback)
+		else if (support & bmdDeviceSupportsPlayback && direction & DeckLinkDeviceIODirectionPlayback)
 		{
 			match = YES;
 		}
+		
+		deckLinkAttributes->Release();
 		
 		if (!match)
 		{
 			return;
 		}
-		
-		deckLinkAttributes->Release();
 		
 		DeckLinkDevice *device = [[DeckLinkDevice alloc] initWithDeckLink:deckLink];
 		[self.devices addObject:device];

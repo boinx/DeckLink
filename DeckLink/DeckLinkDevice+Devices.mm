@@ -8,10 +8,10 @@
 
 + (NSArray *)devices
 {
-	return [self devicesWithIOSupport:DeckLinkDeviceIOSupportCapture | DeckLinkDeviceIOSupportPlayback];
+	return [self devicesWithIODirection:DeckLinkDeviceIODirectionCapture | DeckLinkDeviceIODirectionPlayback];
 }
 
-+ (NSArray *)devicesWithIOSupport:(DeckLinkDeviceIOSupport)IOSupport
++ (NSArray *)devicesWithIODirection:(DeckLinkDeviceIODirection)direction
 {
 	IDeckLinkIterator *iterator = CreateDeckLinkIteratorInstance();
 	if (iterator == NULL)
@@ -30,20 +30,25 @@
 			continue;
 		}
 		
-		int64_t videoIOSupport = 0;
-		deckLinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &videoIOSupport);
+		int64_t support = 0;
+		deckLinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &support);
 
 		BOOL match = NO;
-		if (videoIOSupport & bmdDeviceSupportsCapture && IOSupport & DeckLinkDeviceIOSupportCapture)
+		if (support & bmdDeviceSupportsCapture && direction & DeckLinkDeviceIODirectionCapture)
 		{
 			match = YES;
 		}
-		else if (videoIOSupport & bmdDeviceSupportsPlayback && IOSupport & DeckLinkDeviceIOSupportPlayback)
+		else if (support & bmdDeviceSupportsPlayback && direction & DeckLinkDeviceIODirectionPlayback)
 		{
 			match = YES;
 		}
 		
 		deckLinkAttributes->Release();
+		
+		if (!match)
+		{
+			continue;
+		}
 		
 		DeckLinkDevice *device = [[DeckLinkDevice alloc] initWithDeckLink:deckLink];
 		[devices addObject:device];
