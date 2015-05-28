@@ -30,48 +30,85 @@
 	IDeckLinkDisplayModeIterator *displayModeIterator = NULL;
 	if (deckLinkInput->GetDisplayModeIterator(&displayModeIterator) == S_OK)
 	{
-		int64_t activeDisplayMode = 0;
-		deckLinkConfiguration->GetInt(bmdDeckLinkConfigDefaultVideoOutputMode, &activeDisplayMode);
-			
-		BMDPixelFormat pixelFormats[] = {
-			//					bmdFormat8BitARGB, // == kCVPixelFormatType_32ARGB == 32
-			bmdFormat8BitYUV, // == kCVPixelFormatType_422YpCbCr8 == '2vuy'
-		};
-			
-		NSMutableArray *formatDescriptions = [NSMutableArray array];
-			
-		CMVideoFormatDescriptionRef activeFormatDescription = NULL;
-			
-		IDeckLinkDisplayMode *displayMode = NULL;
-		while (displayModeIterator->Next(&displayMode) == S_OK)
+		// Video
 		{
-			BMDDisplayMode displayModeKey = displayMode->GetDisplayMode();
-				
-			for (size_t index = 0; index < sizeof(pixelFormats) / sizeof(*pixelFormats); ++index)
+			BMDPixelFormat pixelFormats[] = {
+				bmdFormat8BitARGB, // == kCVPixelFormatType_32ARGB == 32
+				bmdFormat8BitYUV, // == kCVPixelFormatType_422YpCbCr8 == '2vuy'
+			};
+			
+			NSMutableArray *formatDescriptions = [NSMutableArray array];
+			
+			IDeckLinkDisplayMode *displayMode = NULL;
+			while (displayModeIterator->Next(&displayMode) == S_OK)
 			{
-				BMDPixelFormat pixelFormat = pixelFormats[index];
-					
-				BMDDisplayModeSupport support = bmdDisplayModeNotSupported;
-				if (deckLinkInput->DoesSupportVideoMode(displayModeKey, pixelFormat, bmdVideoOutputFlagDefault, &support, NULL) == S_OK && support != bmdDisplayModeNotSupported)
+				BMDDisplayMode displayModeKey = displayMode->GetDisplayMode();
+				
+				for (size_t index = 0; index < sizeof(pixelFormats) / sizeof(*pixelFormats); ++index)
 				{
-					CMVideoFormatDescriptionRef formatDescription = NULL;
-					if(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, support == bmdDisplayModeSupported, &formatDescription) == noErr)
+					BMDPixelFormat pixelFormat = pixelFormats[index];
+					
+					BMDDisplayModeSupport support = bmdDisplayModeNotSupported;
+					if (deckLinkInput->DoesSupportVideoMode(displayModeKey, pixelFormat, bmdVideoOutputFlagDefault, &support, NULL) == S_OK && support != bmdDisplayModeNotSupported)
 					{
-						[formatDescriptions addObject:(__bridge id)formatDescription];
-						CFRelease(formatDescription);
+						CMVideoFormatDescriptionRef formatDescription = NULL;
+						if(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, support == bmdDisplayModeSupported, &formatDescription) == noErr)
+						{
+							[formatDescriptions addObject:(__bridge id)formatDescription];
+							CFRelease(formatDescription);
+						}
 					}
 				}
 			}
-		}
-		displayModeIterator->Release();
+			displayModeIterator->Release();
 			
-		if (activeFormatDescription == NULL)
+			self.captureVideoFormatDescriptions = formatDescriptions;
+			// TODO: get active format description from the device
+		}
+		
+		// Audio
 		{
-			activeFormatDescription = (__bridge CMVideoFormatDescriptionRef)formatDescriptions.firstObject;
-		}
+			NSMutableArray *formatDescriptions = [NSMutableArray arrayWithCapacity:2];
 			
-		self.captureVideoFormatDescriptions = formatDescriptions;
-		self.captureActiveVideoFormatDescription = activeFormatDescription;
+			// bmdAudioSampleRate48kHz / bmdAudioSampleType16bitInteger
+			{
+				const AudioStreamBasicDescription streamBasicDescription = { 48000.0, kAudioFormatLinearPCM, kAudioFormatFlagIsSignedInteger, 4, 1, 4, 2, 16, 0 };
+				const AudioChannelLayout channelLayout = { kAudioChannelLayoutTag_Stereo, 0 };
+				
+				NSDictionary *extensions = @{
+					(__bridge id)kCMFormatDescriptionExtension_FormatName: @"48.000 Hz, 16-bit, stereo"
+				};
+				
+				CMAudioFormatDescriptionRef formatDescription = NULL;
+				CMAudioFormatDescriptionCreate(NULL, &streamBasicDescription, sizeof(channelLayout), &channelLayout, 0, NULL, (__bridge CFDictionaryRef)extensions, &formatDescription);
+				
+				if (formatDescription != NULL)
+				{
+					[formatDescriptions addObject:(__bridge id)formatDescription];
+				}
+			}
+			
+			// bmdAudioSampleRate48kHz / bmdAudioSampleType32bitInteger
+			{
+				const AudioStreamBasicDescription streamBasicDescription = { 48000.0, kAudioFormatLinearPCM, kAudioFormatFlagIsSignedInteger, 8, 1, 8, 2, 32, 0 };
+				const AudioChannelLayout channelLayout = { kAudioChannelLayoutTag_Stereo, 0 };
+				
+				NSDictionary *extensions = @{
+					(__bridge id)kCMFormatDescriptionExtension_FormatName: @"48.000 Hz, 32-bit, stereo"
+				};
+				
+				CMAudioFormatDescriptionRef formatDescription = NULL;
+				CMAudioFormatDescriptionCreate(NULL, &streamBasicDescription, sizeof(channelLayout), &channelLayout, 0, NULL, (__bridge CFDictionaryRef)extensions, &formatDescription);
+				
+				if (formatDescription != NULL)
+				{
+					[formatDescriptions addObject:(__bridge id)formatDescription];
+				}
+			}
+			
+			self.captureAudioFormatDescriptions = formatDescriptions;
+			// TODO: get active format description
+		}
 	}
 }
 
@@ -89,7 +126,47 @@
 				return;
 			}
 			
-//			deckLinkInput->EnableVideoInput(<#BMDDisplayMode displayMode#>, <#BMDPixelFormat pixelFormat#>, <#BMDVideoInputFlags flags#>)
+			NSNumber *displayModeValue = (__bridge NSNumber *)CMFormatDescriptionGetExtension(captureActiveVideoFormatDescription, DeckLinkFormatDescriptionDisplayModeKey);
+			if (![displayModeValue isKindOfClass:NSNumber.class])
+			{
+				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:kCMFormatDescriptionError_ValueNotAvailable userInfo:nil];
+				return;
+			}
+			
+			BMDDisplayMode displayMode = displayModeValue.intValue;
+			
+			BMDPixelFormat pixelFormat = CMVideoFormatDescriptionGetCodecType(captureActiveVideoFormatDescription);
+			
+			bool supportsInputFormatDetection = false;
+			deckLinkAttributes->GetFlag(BMDDeckLinkSupportsInputFormatDetection, &supportsInputFormatDetection);
+			
+			BMDVideoInputFlags flags = bmdVideoInputFlagDefault;
+			if (supportsInputFormatDetection)
+			{
+				flags |= bmdVideoInputEnableFormatDetection;
+			}
+			
+			deckLinkInput->PauseStreams();
+			HRESULT status = deckLinkInput->EnableVideoInput(displayMode, pixelFormat, flags);
+			if (status != S_OK)
+			{
+				deckLinkInput->PauseStreams();
+				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+				return;
+			}
+			deckLinkInput->PauseStreams();
+		}
+		else
+		{
+			deckLinkInput->PauseStreams();
+			HRESULT status = deckLinkInput->DisableVideoInput();
+			if (status != S_OK)
+			{
+				deckLinkInput->PauseStreams();
+				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+				return;
+			}
+			deckLinkInput->PauseStreams();
 		}
 		
 		self.captureActiveVideoFormatDescription = captureActiveVideoFormatDescription;
@@ -124,22 +201,78 @@
 
 - (void)setCaptureVideoDelegate:(id<DeckLinkDeviceCaptureVideoDelegate>)delegate queue:(dispatch_queue_t)queue
 {
+	if(delegate != nil && queue == nil)
+	{
+		queue = dispatch_get_main_queue();
+	}
 	
+	dispatch_sync(self.captureQueue, ^{
+		self.captureVideoDelegate = delegate;
+		self.captureVideoDelegateQueue = queue;
+	});
 }
 
 - (void)setCaptureAudioDelegate:(id<DeckLinkDeviceCaptureAudioDelegate>)delegate queue:(dispatch_queue_t)queue
 {
+	if(delegate != nil && queue == nil)
+	{
+		queue = dispatch_get_main_queue();
+	}
 	
+	dispatch_sync(self.captureQueue, ^{
+		self.captureAudioDelegate = delegate;
+		self.captureAudioDelegateQueue = queue;
+	});
 }
 
-- (BOOL)startCaptureWithError:(NSError **)error
+- (BOOL)startCaptureWithError:(NSError **)outError
 {
-	return NO;
+	__block BOOL result = NO;
+	__block NSError *error = nil;
+	dispatch_sync(self.captureQueue, ^{
+		if (self.captureActive)
+		{
+			result = YES;
+			return;
+		}
+
+		HRESULT status = deckLinkInput->StartStreams();
+		if (status != S_OK)
+		{
+			error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+			return;
+		}
+		
+		self.captureActive = YES;
+		result = YES;
+	});
+	
+	if (error != nil)
+	{
+		if (outError != NULL)
+		{
+			*outError = error;
+		}
+		else
+		{
+			NSLog(@"%s:%d: %@", __FUNCTION__, __LINE__, error);
+		}
+	}
+	return result;
 }
 
 - (void)stopCapture
 {
-	
+	dispatch_sync(self.captureQueue, ^{
+		if (!self.captureActive)
+		{
+			return;
+		}
+		
+		deckLinkInput->StopStreams();
+		
+		self.captureActive = NO;
+	});
 }
 
 @end

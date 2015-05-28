@@ -31,7 +31,7 @@
 		5061EAF81B16582D003552DE /* DeckLinkDevice+Devices.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5061EAF61B16582D003552DE /* DeckLinkDevice+Devices.mm */; };
 		5061EAFA1B165CCE003552DE /* DeckLink_021_DeviceBrowserTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5061EAF91B165CCE003552DE /* DeckLink_021_DeviceBrowserTests.m */; };
 		5061EB111B1667A5003552DE /* DeckLinkDeviceIODirection.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB101B166761003552DE /* DeckLinkDeviceIODirection.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		5061EB291B16E946003552DE /* DeckLinkDevice+Capture.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB271B16E946003552DE /* DeckLinkDevice+Capture.h */; };
+		5061EB291B16E946003552DE /* DeckLinkDevice+Capture.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB271B16E946003552DE /* DeckLinkDevice+Capture.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5061EB2A1B16E946003552DE /* DeckLinkDevice+Capture.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5061EB281B16E946003552DE /* DeckLinkDevice+Capture.mm */; };
 		5061EB311B17230D003552DE /* DeckLinkDevice+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB2F1B17230D003552DE /* DeckLinkDevice+Internal.h */; };
 		5061EB351B172E47003552DE /* CMFormatDescription+DeckLink.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB331B172E47003552DE /* CMFormatDescription+DeckLink.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -40,6 +40,9 @@
 		5061EB3F1B17319B003552DE /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5061EB3C1B17316E003552DE /* CoreVideo.framework */; };
 		5061EB401B17319B003552DE /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5061EB3A1B173164003552DE /* CoreMedia.framework */; };
 		5061EB421B1732B0003552DE /* DeckLink_001_APITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5061EB411B1732B0003552DE /* DeckLink_001_APITests.m */; };
+		5061EB441B174D82003552DE /* DeckLink_041_Capture.m in Sources */ = {isa = PBXBuildFile; fileRef = 5061EB431B174D82003552DE /* DeckLink_041_Capture.m */; };
+		5061EB5D1B179014003552DE /* DeckLinkDeviceInputCallbackDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB5B1B179014003552DE /* DeckLinkDeviceInputCallbackDelegate.h */; };
+		5061EB5E1B179014003552DE /* DeckLinkDeviceInputCallbackDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5061EB5C1B179014003552DE /* DeckLinkDeviceInputCallbackDelegate.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -89,6 +92,9 @@
 		5061EB3A1B173164003552DE /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		5061EB3C1B17316E003552DE /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		5061EB411B1732B0003552DE /* DeckLink_001_APITests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeckLink_001_APITests.m; sourceTree = "<group>"; };
+		5061EB431B174D82003552DE /* DeckLink_041_Capture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DeckLink_041_Capture.m; sourceTree = "<group>"; };
+		5061EB5B1B179014003552DE /* DeckLinkDeviceInputCallbackDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeckLinkDeviceInputCallbackDelegate.h; sourceTree = "<group>"; };
+		5061EB5C1B179014003552DE /* DeckLinkDeviceInputCallbackDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = DeckLinkDeviceInputCallbackDelegate.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -152,6 +158,7 @@
 				5061E9561B164177003552DE /* DeckLink_011_InformationTests.m */,
 				5061EAF91B165CCE003552DE /* DeckLink_021_DeviceBrowserTests.m */,
 				5061EB371B172F4A003552DE /* DeckLink_031_FormatDescriptionTests.mm */,
+				5061EB431B174D82003552DE /* DeckLink_041_Capture.m */,
 				5061E9541B164177003552DE /* Supporting Files */,
 			);
 			path = DeckLinkTests;
@@ -211,6 +218,7 @@
 				5061EAF61B16582D003552DE /* DeckLinkDevice+Devices.mm */,
 				5061EB271B16E946003552DE /* DeckLinkDevice+Capture.h */,
 				5061EB281B16E946003552DE /* DeckLinkDevice+Capture.mm */,
+				5061EB5A1B178F72003552DE /* Internal */,
 			);
 			name = Device;
 			sourceTree = "<group>";
@@ -242,6 +250,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		5061EB5A1B178F72003552DE /* Internal */ = {
+			isa = PBXGroup;
+			children = (
+				5061EB5B1B179014003552DE /* DeckLinkDeviceInputCallbackDelegate.h */,
+				5061EB5C1B179014003552DE /* DeckLinkDeviceInputCallbackDelegate.mm */,
+			);
+			name = Internal;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -255,6 +272,7 @@
 				5061EACF1B1641E7003552DE /* DeckLinkAPITypes.h in Headers */,
 				5061EAEE1B1652F2003552DE /* DeckLinkDevice.h in Headers */,
 				5061EAE91B165073003552DE /* DeckLinkDeviceBrowserInternalCallback.h in Headers */,
+				5061EB5D1B179014003552DE /* DeckLinkDeviceInputCallbackDelegate.h in Headers */,
 				5061EAF71B16582D003552DE /* DeckLinkDevice+Devices.h in Headers */,
 				5061EAC51B1641E7003552DE /* DeckLinkAPI.h in Headers */,
 				5061EAD01B1641E7003552DE /* DeckLinkAPIVersion.h in Headers */,
@@ -370,6 +388,7 @@
 				5061EACA1B1641E7003552DE /* DeckLinkAPIDispatch.cpp in Sources */,
 				5061EAEA1B165073003552DE /* DeckLinkDeviceBrowserInternalCallback.mm in Sources */,
 				5061EAF81B16582D003552DE /* DeckLinkDevice+Devices.mm in Sources */,
+				5061EB5E1B179014003552DE /* DeckLinkDeviceInputCallbackDelegate.mm in Sources */,
 				5061EAEF1B1652F2003552DE /* DeckLinkDevice.mm in Sources */,
 				5061EB2A1B16E946003552DE /* DeckLinkDevice+Capture.mm in Sources */,
 				5061EAE51B164E0A003552DE /* DeckLinkDeviceBrowser.mm in Sources */,
@@ -384,6 +403,7 @@
 			files = (
 				5061E9571B164177003552DE /* DeckLink_011_InformationTests.m in Sources */,
 				5061EAFA1B165CCE003552DE /* DeckLink_021_DeviceBrowserTests.m in Sources */,
+				5061EB441B174D82003552DE /* DeckLink_041_Capture.m in Sources */,
 				5061EB381B172F4A003552DE /* DeckLink_031_FormatDescriptionTests.mm in Sources */,
 				5061EB421B1732B0003552DE /* DeckLink_001_APITests.m in Sources */,
 			);
