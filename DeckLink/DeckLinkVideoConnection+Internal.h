@@ -8,9 +8,9 @@
 #define DECKLINK_EXTERN_C
 #endif
 
+
 DECKLINK_EXTERN_C NSArray *DeckLinkVideoConnectionsFromBMDVideoConnection(BMDVideoConnection videoConnection);
 
 DECKLINK_EXTERN_C NSString *DeckLinkVideoConnectionFromBMDVideoConnection(BMDVideoConnection videoConnection);
 
 DECKLINK_EXTERN_C BMDVideoConnection DeckLinkVideoConnectionToBMDVideoConnection(NSString *videoConnection);
-

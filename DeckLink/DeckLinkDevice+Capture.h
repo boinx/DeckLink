@@ -35,7 +35,12 @@
 @property (atomic, strong, readonly) NSString *captureActiveVideoConnection;
 - (BOOL)setCaptureActiveVideoConnection:(NSString *)connection error:(NSError **)error;
 
+@property (nonatomic, copy, readonly) NSArray *captureAudioConnections;
+@property (atomic, strong, readonly) NSString *captureActiveAudioConnection;
+- (BOOL)setCaptureActiveAudioConnection:(NSString *)connection error:(NSError **)error;
+
 - (void)setCaptureVideoDelegate:(id<DeckLinkDeviceCaptureVideoDelegate>)delegate queue:(dispatch_queue_t)queue;
+
 - (void)setCaptureAudioDelegate:(id<DeckLinkDeviceCaptureAudioDelegate>)delegate queue:(dispatch_queue_t)queue;
 
 - (BOOL)startCaptureWithError:(NSError **)error;

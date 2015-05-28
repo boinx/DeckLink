@@ -31,20 +31,44 @@
 
 - (void)testVideoConnection
 {
-	NSArray *devices = [DeckLinkDevice devicesWithIODirection:DeckLinkDeviceIODirectionCapture];
-	for (DeckLinkDevice *device in devices)
+	DeckLinkDevice *device = [DeckLinkDevice devicesWithIODirection:DeckLinkDeviceIODirectionCapture].firstObject;
+	XCTAssertNotNil(device);
+
+	NSArray *videoConnections = device.captureVideoConnections;
+	XCTAssertNotNil(videoConnections);
+	XCTAssertGreaterThan(videoConnections.count, 0);
+
+	for (NSString *videoConnection in videoConnections)
 	{
-		NSArray *videoConnections = device.captureVideoConnections;
-		XCTAssertNotNil(videoConnections);
-		XCTAssertGreaterThan(videoConnections.count, 0);
-		
-		for (NSString *videoConnection in videoConnections)
-		{
-			NSError *error = nil;
-			XCTAssertTrue([device setCaptureActiveVideoConnection:videoConnection error:&error], @"%@", error);
-			XCTAssertNil(error);
-		}
+		NSError *error = nil;
+		XCTAssertTrue([device setCaptureActiveVideoConnection:videoConnection error:&error], @"%@", error);
+		XCTAssertNil(error);
 	}
+	
+	NSError *error = nil;
+	XCTAssertFalse([device setCaptureActiveVideoConnection:@"Invalid" error:&error]);
+	XCTAssertNotNil(error);
+}
+
+- (void)testAudioConnection
+{
+	DeckLinkDevice *device = [DeckLinkDevice devicesWithIODirection:DeckLinkDeviceIODirectionCapture].firstObject;
+	XCTAssertNotNil(device);
+
+	NSArray *audioConnections = device.captureAudioConnections;
+	XCTAssertNotNil(audioConnections);
+	XCTAssertGreaterThan(audioConnections.count, 0);
+	
+	for (NSString *audioConnection in audioConnections)
+	{
+		NSError *error = nil;
+		XCTAssertTrue([device setCaptureActiveAudioConnection:audioConnection error:&error], @"%@", error);
+		XCTAssertNil(error);
+	}
+		
+	NSError *error = nil;
+	XCTAssertFalse([device setCaptureActiveAudioConnection:@"Invalid" error:&error]);
+	XCTAssertNotNil(error);
 }
 
 - (void)testSimpleCapture
