@@ -42,31 +42,39 @@
 				IDeckLinkDisplayMode *displayMode = NULL;
 				while (displayModeIterator->Next(&displayMode) == S_OK)
 				{
-					CMVideoFormatDescriptionRef formatDescription = NULL;
-					XCTAssertEqual(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, kCMPixelFormat_422YpCbCr8, &formatDescription), noErr);
-					XCTAssertNotNil((__bridge id)formatDescription);
+					CMPixelFormatType pixelFormat = kCMPixelFormat_422YpCbCr8;
 					
-					CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
-					XCTAssertEqual(dimensions.width, (int32_t)displayMode->GetWidth());
-					XCTAssertEqual(dimensions.height, (int32_t)displayMode->GetHeight());
+					BMDDisplayModeSupport displayModeSupport = 0;
+					if (deckLinkInput->DoesSupportVideoMode(displayMode->GetDisplayMode(), (BMDPixelFormat)pixelFormat, bmdVideoInputFlagDefault, &displayModeSupport, NULL) == S_OK && displayModeSupport != bmdDisplayModeNotSupported)
+					{
+						CMVideoFormatDescriptionRef formatDescription = NULL;
+						XCTAssertEqual(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, displayModeSupport == bmdDisplayModeSupported, &formatDescription), noErr);
+						XCTAssertNotNil((__bridge id)formatDescription);
 					
-					CMTime frameRate = kCMTimeInvalid;
-					XCTAssertEqual(CMVideoFormatDescriptionGetDeckLinkFrameRate(formatDescription, &frameRate), noErr);
-					XCTAssertTrue(CMTIME_IS_VALID(frameRate));
+						CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
+						XCTAssertEqual(dimensions.width, (int32_t)displayMode->GetWidth());
+						XCTAssertEqual(dimensions.height, (int32_t)displayMode->GetHeight());
 					
-					NSNumber *displayModeValue = (__bridge NSNumber *)CMFormatDescriptionGetExtension(formatDescription, DeckLinkFormatDescriptionDisplayModeKey);
-					XCTAssertNotNil(displayModeValue);
-					XCTAssertTrue([displayModeValue isKindOfClass:NSNumber.class]);
-					XCTAssertEqual(displayModeValue.intValue, displayMode->GetDisplayMode());
+						CMTime frameRate = kCMTimeInvalid;
+						XCTAssertEqual(CMVideoFormatDescriptionGetDeckLinkFrameRate(formatDescription, &frameRate), noErr);
+						XCTAssertTrue(CMTIME_IS_VALID(frameRate));
 					
-					CFRelease(formatDescription);
-					formatDescription = NULL;
+						NSNumber *displayModeValue = (__bridge NSNumber *)CMFormatDescriptionGetExtension(formatDescription, DeckLinkFormatDescriptionDisplayModeKey);
+						XCTAssertNotNil(displayModeValue);
+						XCTAssertTrue([displayModeValue isKindOfClass:NSNumber.class]);
+						XCTAssertEqual(displayModeValue.intValue, displayMode->GetDisplayMode());
+					
+						CFRelease(formatDescription);
+						formatDescription = NULL;
 
-					createdFormatDescription = YES;
+						createdFormatDescription = YES;
+					}
 				}
+				displayModeIterator->Release();
+				displayModeIterator = NULL;
 			}
-			displayModeIterator->Release();
-			displayModeIterator = NULL;
+			deckLinkInput->Release();
+			deckLinkInput = NULL;
 		}
 		
 		IDeckLinkOutput *deckLinkOutput = NULL;
@@ -77,32 +85,42 @@
 			{
 				IDeckLinkDisplayMode *displayMode = NULL;
 				while (displayModeIterator->Next(&displayMode) == S_OK)
-				{
-					CMVideoFormatDescriptionRef formatDescription = NULL;
-					XCTAssertEqual(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, kCMPixelFormat_422YpCbCr8, &formatDescription), noErr);
-					XCTAssertNotNil((__bridge id)formatDescription);
+				{					
+					CMPixelFormatType pixelFormat = kCMPixelFormat_422YpCbCr8;
 					
-					CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
-					XCTAssertEqual(dimensions.width, (int32_t)displayMode->GetWidth());
-					XCTAssertEqual(dimensions.height, (int32_t)displayMode->GetHeight());
-					
-					CMTime frameRate = kCMTimeInvalid;
-					XCTAssertEqual(CMVideoFormatDescriptionGetDeckLinkFrameRate(formatDescription, &frameRate), noErr);
-					XCTAssertTrue(CMTIME_IS_VALID(frameRate));
-					
-					NSNumber *displayModeValue = (__bridge NSNumber *)CMFormatDescriptionGetExtension(formatDescription, DeckLinkFormatDescriptionDisplayModeKey);
-					XCTAssertNotNil(displayModeValue);
-					XCTAssertTrue([displayModeValue isKindOfClass:NSNumber.class]);
-					XCTAssertEqual(displayModeValue.intValue, displayMode->GetDisplayMode());
-					
-					CFRelease(formatDescription);
-					formatDescription = NULL;
-					
-					createdFormatDescription = YES;
+					BMDDisplayModeSupport displayModeSupport = 0;
+					if (deckLinkOutput->DoesSupportVideoMode(displayMode->GetDisplayMode(), (BMDPixelFormat)pixelFormat, bmdVideoInputFlagDefault, &displayModeSupport, NULL) == S_OK && displayModeSupport != bmdDisplayModeNotSupported)
+					{
+						CMVideoFormatDescriptionRef formatDescription = NULL;
+						XCTAssertEqual(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, displayModeSupport == bmdDisplayModeSupported, &formatDescription), noErr);
+						XCTAssertNotNil((__bridge id)formatDescription);
+						
+						CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
+						XCTAssertEqual(dimensions.width, (int32_t)displayMode->GetWidth());
+						XCTAssertEqual(dimensions.height, (int32_t)displayMode->GetHeight());
+						
+						CMTime frameRate = kCMTimeInvalid;
+						XCTAssertEqual(CMVideoFormatDescriptionGetDeckLinkFrameRate(formatDescription, &frameRate), noErr);
+						XCTAssertTrue(CMTIME_IS_VALID(frameRate));
+						
+						NSNumber *displayModeValue = (__bridge NSNumber *)CMFormatDescriptionGetExtension(formatDescription, DeckLinkFormatDescriptionDisplayModeKey);
+						XCTAssertNotNil(displayModeValue);
+						XCTAssertTrue([displayModeValue isKindOfClass:NSNumber.class]);
+						XCTAssertEqual(displayModeValue.intValue, displayMode->GetDisplayMode());
+						
+						CFRelease(formatDescription);
+						formatDescription = NULL;
+						
+						createdFormatDescription = YES;
+					}
 				}
+				
+				displayModeIterator->Release();
+				displayModeIterator = NULL;
 			}
-			displayModeIterator->Release();
-			displayModeIterator = NULL;
+			
+			deckLinkOutput->Release();
+			deckLinkOutput = NULL;
 		}
 	}
 	deckLinkIterator->Release();

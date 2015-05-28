@@ -8,10 +8,10 @@ CFStringRef const DeckLinkFormatDescriptionDisplayModeKey = CFSTR("com.blackmagi
 
 CFStringRef const DeckLinkFormatDescriptionFrameRateKey = CFSTR("com.blackmagicdesign.DeckLinkFrameRate");
 
-//CFStringRef const DeckLinkFormatDescriptionNativeDisplayModeSupportKey = CFSTR("com.blackmagicdesign.DeckLinkNativeDisplayModeSupport");
+CFStringRef const DeckLinkFormatDescriptionNativeDisplayModeSupportKey = CFSTR("com.blackmagicdesign.DeckLinkNativeDisplayModeSupport");
 
 
-OSStatus CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(IDeckLinkDisplayMode *displayMode, CMVideoCodecType pixelFormat, CMVideoFormatDescriptionRef *outFormatDescription)
+OSStatus CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(IDeckLinkDisplayMode *displayMode, CMVideoCodecType pixelFormat, Boolean nativePixelFormatSupport, CMVideoFormatDescriptionRef *outFormatDescription)
 {
 	if (displayMode == NULL)
 	{
@@ -27,6 +27,7 @@ OSStatus CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(IDeckLinkDisplayM
 	
 	const BMDDisplayMode displayModeKey = displayMode->GetDisplayMode();
 	extensions[(__bridge NSString *)DeckLinkFormatDescriptionDisplayModeKey] = @(displayModeKey);
+	extensions[(__bridge NSString *)DeckLinkFormatDescriptionNativeDisplayModeSupportKey] = @(nativePixelFormatSupport);
 	
 	{
 		CFStringRef nameCF = NULL;

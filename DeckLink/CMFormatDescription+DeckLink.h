@@ -20,8 +20,14 @@ extern CFStringRef const DeckLinkFormatDescriptionDisplayModeKey;
  */
 extern CFStringRef const DeckLinkFormatDescriptionFrameRateKey;
 
+/**
+ * Indicates if the pixelformat is supported natively by the device.
+ * CFNumberRef (Boolean)
+ */
+extern CFStringRef const DeckLinkFormatDescriptionNativeDisplayModeSupportKey;
 
-OSStatus CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(IDeckLinkDisplayMode *displayMode, CMVideoCodecType pixelFormat, CMVideoFormatDescriptionRef *outFormatDescription);
+
+OSStatus CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(IDeckLinkDisplayMode *displayMode, CMVideoCodecType pixelFormat, Boolean nativePixelFormatSupport, CMVideoFormatDescriptionRef *outFormatDescription);
 
 OSStatus CMVideoFormatDescriptionGetDeckLinkFrameRate(CMFormatDescriptionRef formatDescription, CMTime *outFrameRate);
 

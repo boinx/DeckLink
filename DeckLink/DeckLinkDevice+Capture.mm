@@ -55,7 +55,7 @@
 				if (deckLinkInput->DoesSupportVideoMode(displayModeKey, pixelFormat, bmdVideoOutputFlagDefault, &support, NULL) == S_OK && support != bmdDisplayModeNotSupported)
 				{
 					CMVideoFormatDescriptionRef formatDescription = NULL;
-					if(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, &formatDescription) == noErr)
+					if(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, support == bmdDisplayModeSupported, &formatDescription) == noErr)
 					{
 						[formatDescriptions addObject:(__bridge id)formatDescription];
 						CFRelease(formatDescription);
