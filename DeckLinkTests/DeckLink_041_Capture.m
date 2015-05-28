@@ -29,6 +29,24 @@
 	[super tearDown];
 }
 
+- (void)testVideoConnection
+{
+	NSArray *devices = [DeckLinkDevice devicesWithIODirection:DeckLinkDeviceIODirectionCapture];
+	for (DeckLinkDevice *device in devices)
+	{
+		NSArray *videoConnections = device.captureVideoConnections;
+		XCTAssertNotNil(videoConnections);
+		XCTAssertGreaterThan(videoConnections.count, 0);
+		
+		for (NSString *videoConnection in videoConnections)
+		{
+			NSError *error = nil;
+			XCTAssertTrue([device setCaptureActiveVideoConnection:videoConnection error:&error], @"%@", error);
+			XCTAssertNil(error);
+		}
+	}
+}
+
 - (void)testSimpleCapture
 {
 	XCTestExpectation *expectation = [self expectationWithDescription:[NSString stringWithFormat:@"%s", __FUNCTION__]];

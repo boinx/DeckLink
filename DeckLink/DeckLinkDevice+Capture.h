@@ -25,11 +25,15 @@
 
 @property (nonatomic, copy, readonly) NSArray *captureVideoFormatDescriptions;
 @property (atomic, strong, readonly) __attribute__((NSObject)) CMVideoFormatDescriptionRef captureActiveVideoFormatDescription;
-- (BOOL)setCaptureActiveVideoFormatDescription:(CMVideoFormatDescriptionRef)captureActiveVideoFormatDescription error:(NSError **)error;
+- (BOOL)setCaptureActiveVideoFormatDescription:(CMVideoFormatDescriptionRef)formatDescription error:(NSError **)error;
 
 @property (nonatomic, copy, readonly) NSArray *captureAudioFormatDescriptions;
 @property (atomic, strong, readonly) __attribute__((NSObject)) CMAudioFormatDescriptionRef captureActiveAudioFormatDescription;
-- (BOOL)setCaptureActiveAudioFormatDescription:(CMAudioFormatDescriptionRef)captureActiveAudioFormatDescription error:(NSError **)error;
+- (BOOL)setCaptureActiveAudioFormatDescription:(CMAudioFormatDescriptionRef)formatDescription error:(NSError **)error;
+
+@property (nonatomic, copy, readonly) NSArray *captureVideoConnections;
+@property (atomic, strong, readonly) NSString *captureActiveVideoConnection;
+- (BOOL)setCaptureActiveVideoConnection:(NSString *)connection error:(NSError **)error;
 
 - (void)setCaptureVideoDelegate:(id<DeckLinkDeviceCaptureVideoDelegate>)delegate queue:(dispatch_queue_t)queue;
 - (void)setCaptureAudioDelegate:(id<DeckLinkDeviceCaptureAudioDelegate>)delegate queue:(dispatch_queue_t)queue;

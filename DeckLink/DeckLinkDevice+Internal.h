@@ -38,8 +38,14 @@
 @property (nonatomic, copy) NSArray *captureVideoFormatDescriptions;
 @property (atomic, strong) __attribute__((NSObject)) CMVideoFormatDescriptionRef captureActiveVideoFormatDescription;
 
+@property (nonatomic, copy) NSArray *captureVideoConnections;
+@property (atomic, strong) NSString *captureActiveVideoConnection;
+
 @property (nonatomic, copy) NSArray *captureAudioFormatDescriptions;
 @property (atomic, strong) __attribute__((NSObject)) CMAudioFormatDescriptionRef captureActiveAudioFormatDescription;
+
+@property (nonatomic, copy) NSArray *captureAudioConnections;
+@property (atomic, strong) NSString *captureActiveAudioConnection;
 
 @property (nonatomic, weak) id<DeckLinkDeviceCaptureVideoDelegate> captureVideoDelegate;
 @property (nonatomic, strong) dispatch_queue_t captureVideoDelegateQueue;

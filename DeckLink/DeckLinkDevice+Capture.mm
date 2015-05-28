@@ -2,7 +2,9 @@
 
 #import "CMFormatDescription+DeckLink.h"
 #import "DeckLinkAPI.h"
+#import "DeckLinkAudioConnection.h"
 #import "DeckLinkDevice+Internal.h"
+#import "DeckLinkVideoConnection+Internal.h"
 
 
 @implementation DeckLinkDevice (Capture)
@@ -109,6 +111,48 @@
 			// TODO: get active format description
 		}
 	}
+	
+	{
+		int64_t inputConnections = 0;
+		deckLinkAttributes->GetInt(BMDDeckLinkVideoInputConnections, &inputConnections);
+		self.captureVideoConnections = DeckLinkVideoConnectionsFromBMDVideoConnection((BMDVideoConnection)inputConnections);
+
+		int64_t activeInputConnection = 0;
+		deckLinkConfiguration->GetInt(bmdDeckLinkConfigVideoInputConnection, &activeInputConnection);
+		self.captureActiveVideoConnection = DeckLinkVideoConnectionFromBMDVideoConnection((BMDVideoConnection)activeInputConnection);
+	}
+
+#if 0
+	{
+		int64_t inputConnection = 0;
+		deckLinkConfiguration->GetInt(bmdDeckLinkConfigAudioInputConnection, &inputConnection);
+
+		NSString *captureActiveAudioConnection = nil;
+		
+		if (inputConnection & bmdAudioConnectionEmbedded)
+		{
+			captureActiveAudioConnection = DeckLinkAudioConnectionEmbedded;
+		}
+		if (inputConnection & bmdAudioConnectionAESEBU)
+		{
+			captureActiveAudioConnection = DeckLinkAudioConnectionAESEBU;
+		}
+		if (inputConnection & bmdAudioConnectionAnalog)
+		{
+			captureActiveAudioConnection = DeckLinkAudioConnectionAnalog;
+		}
+		if (inputConnection & bmdAudioConnectionAnalogXLR)
+		{
+			captureActiveAudioConnection = DeckLinkAudioConnectionAnalogXLR;
+		}
+		if (inputConnection & bmdAudioConnectionAnalogRCA)
+		{
+			captureActiveAudioConnection = DeckLinkAudioConnectionAnalogRCA;
+		}
+		
+		self.captureActiveAudioConnection = captureActiveAudioConnection;
+	}
+#endif
 }
 
 - (BOOL)setCaptureActiveVideoFormatDescription:(CMVideoFormatDescriptionRef)formatDescription error:(NSError **)outError
@@ -232,6 +276,69 @@
 		
 		self.captureActiveAudioFormatDescription = formatDescription;
 		result = YES;
+	});
+	
+	if (error != nil)
+	{
+		if (outError != NULL)
+		{
+			*outError = error;
+		}
+		else
+		{
+			NSLog(@"%s:%d: %@", __FUNCTION__, __LINE__, error);
+		}
+	}
+	
+	return result;
+}
+
+- (BOOL)setCaptureActiveVideoConnection:(NSString *)connection error:(NSError **)outError
+{
+	__block BOOL result = NO;
+	__block NSError *error = nil;
+
+	dispatch_sync(self.captureQueue, ^{
+		BMDVideoConnection videoConnection = DeckLinkVideoConnectionToBMDVideoConnection(connection);
+		if (videoConnection == 0)
+		{
+			error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
+			return;
+		}
+		
+		HRESULT status = deckLinkConfiguration->SetInt(bmdDeckLinkConfigVideoInputConnection, videoConnection);
+		if (status != S_OK)
+		{
+			error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+			return;
+		}
+		
+		self.captureActiveVideoConnection = connection;
+		result = YES;
+	});
+	
+	if (error != nil)
+	{
+		if (outError != NULL)
+		{
+			*outError = error;
+		}
+		else
+		{
+			NSLog(@"%s:%d: %@", __FUNCTION__, __LINE__, error);
+		}
+	}
+	
+	return result;
+}
+
+- (BOOL)setCaptureActiveAudioConnection:(NSString *)connection error:(NSError **)outError
+{
+	__block BOOL result = NO;
+	__block NSError *error = nil;
+
+	dispatch_sync(self.captureQueue, ^{
+		
 	});
 	
 	if (error != nil)
