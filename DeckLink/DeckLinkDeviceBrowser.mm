@@ -1,7 +1,7 @@
 #import "DeckLinkDeviceBrowser.h"
 
 #import "DeckLinkAPI.h"
-#import "DeckLinkDevice+Creation.h"
+#import "DeckLinkDevice+Internal.h"
 #import "DeckLinkDeviceBrowserInternalCallback.h"
 
 

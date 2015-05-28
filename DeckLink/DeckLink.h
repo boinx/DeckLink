@@ -17,6 +17,8 @@ FOUNDATION_EXPORT const unsigned char DeckLinkVersionString[];
 // In this header, you should import all the public headers of your framework using statements like #import <DeckLink/PublicHeader.h>
 
 
+#import "CMFormatDescription+DeckLink.h"
+
 #import "DeckLinkInformation.h"
 
 #import "DeckLinkDevice.h"

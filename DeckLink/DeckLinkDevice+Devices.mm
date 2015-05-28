@@ -1,7 +1,7 @@
 #import "DeckLinkDevice+Devices.h"
 
 #import "DeckLinkAPI.h"
-#import "DeckLinkDevice+Creation.h"
+#import "DeckLinkDevice+Internal.h"
 
 
 @implementation DeckLinkDevice (Devices)
@@ -56,7 +56,7 @@
 	
 	iterator->Release();
 	
-	return devices;
+	return devices.count != 0 ? [NSArray arrayWithArray:devices] : nil;
 }
 
 @end

@@ -7,7 +7,8 @@
 
 /**
  * Returns the API version.
- * Use NSNumericSearch to as option when comparing the value.
+ * Example: 10.3.7
+ * Use NSNumericSearch as option when comparing the value.
  */
 - (NSString *)APIVersion;
 

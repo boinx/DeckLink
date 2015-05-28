@@ -4,12 +4,12 @@
 #import "DeckLinkInformation.h"
 
 
-@interface DeckLinkTests : XCTestCase
+@interface DeckLink_011_InformationTests : XCTestCase
 
 @end
 
 
-@implementation DeckLinkTests
+@implementation DeckLink_011_InformationTests
 
 - (void)setUp
 {
