@@ -65,7 +65,19 @@
 }
 
 - (void)dealloc
-{	
+{
+	if (deckLinkInputCallback != NULL)
+	{
+		deckLinkInputCallback->Release();
+		deckLinkInputCallback = NULL;
+	}
+	
+	if (deckLinkInput != NULL)
+	{
+		deckLinkInput->Release();
+		deckLinkInput = NULL;
+	}
+	
 	if (deckLinkConfiguration != NULL)
 	{
 		deckLinkConfiguration->Release();
