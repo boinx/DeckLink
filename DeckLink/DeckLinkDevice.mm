@@ -65,7 +65,7 @@
 }
 
 - (void)dealloc
-{
+{	
 	if (deckLinkConfiguration != NULL)
 	{
 		deckLinkConfiguration->Release();

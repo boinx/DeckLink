@@ -2,6 +2,7 @@
 
 #import "DeckLinkAPI.h"
 #import "DeckLinkDevice+Capture.h"
+#import "DeckLinkDeviceInternalInputCallback.h"
 
 
 @interface DeckLinkDevice ()
@@ -13,12 +14,8 @@
 	IDeckLinkInput *deckLinkInput;
 	IDeckLinkOutput *deckLinkOutput;
 	
-//	BDDLDeviceInternalInputCallback *inputCallback;
+	DeckLinkDeviceInternalInputCallback *deckLinkInputCallback;
 //	BDDLDeviceInternalOutputCallback *outputCallback;
-	
-	CVPixelBufferPoolRef pixelBufferPool;
-	
-	BMDTimeValue oldTimestamp;
 }
 
 - (instancetype)initWithDeckLink:(IDeckLink *)deckLink;
@@ -49,6 +46,8 @@
 
 @property (nonatomic, weak) id<DeckLinkDeviceCaptureAudioDelegate> captureAudioDelegate;
 @property (nonatomic, strong) dispatch_queue_t captureAudioDelegateQueue;
+
+@property (nonatomic, strong) __attribute__((NSObject)) CVPixelBufferPoolRef capturePixelBufferPool;
 
 
 // record
