@@ -1,5 +1,6 @@
 #import "DeckLinkDevice.h"
 
+#import <CoreMedia/CoreMedia.h>
 #import "DeckLinkAPI.h"
 #import "DeckLinkDevice+Internal.h"
 
@@ -7,6 +8,13 @@
 @interface DeckLinkDevice (CaptureSetup)
 
 - (void)setupCapture;
+
+@end
+
+
+@interface DeckLinkDevice (PlaybackSetup)
+
+- (void)setupPlayback;
 
 @end
 
@@ -35,6 +43,11 @@
 			return nil;
 		}
 		
+		if (deckLink->QueryInterface(IID_IDeckLinkKeyer, (void **)&deckLinkKeyer) != S_OK)
+		{
+			// keyer may be nil
+		}
+		
 		CFStringRef modelName = NULL;
 		if (deckLink->GetModelName(&modelName) == S_OK)
 		{
@@ -60,12 +73,19 @@
 		}
 		
 		[self setupCapture];
+		[self setupPlayback];
 	}
 	return self;
 }
 
 - (void)dealloc
 {
+	if (deckLinkOutput != NULL)
+	{
+		deckLinkOutput->Release();
+		deckLinkOutput = NULL;
+	}
+	
 	if (deckLinkInputCallback != NULL)
 	{
 		deckLinkInputCallback->Release();
@@ -76,6 +96,12 @@
 	{
 		deckLinkInput->Release();
 		deckLinkInput = NULL;
+	}
+	
+	if (deckLinkKeyer != NULL)
+	{
+		deckLinkKeyer->Release();
+		deckLinkKeyer = NULL;
 	}
 	
 	if (deckLinkConfiguration != NULL)

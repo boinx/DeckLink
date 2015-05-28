@@ -1,6 +1,7 @@
 #import "DeckLinkDevice.h"
 
 #import "DeckLinkAPI.h"
+#import "DeckLinkDevice.h"
 #import "DeckLinkDevice+Capture.h"
 #import "DeckLinkDeviceInternalInputCallback.h"
 
@@ -55,25 +56,15 @@
 
 @property (nonatomic, strong) __attribute__((NSObject)) CVPixelBufferPoolRef capturePixelBufferPool;
 
+// playback
 
-// record
+@property (atomic, assign) BOOL playbackSupported;
+@property (atomic, assign) BOOL playbackActive;
 
-@property (nonatomic, strong) dispatch_queue_t recordQueue;
+@property (nonatomic, strong) dispatch_queue_t playbackQueue;
 
-@property (nonatomic, assign) BOOL canRecord;
-@property (nonatomic, assign) BOOL supportsRecordFormatDetection;
-@property (nonatomic, copy) NSArray *recordVideoFormatDescriptions;
-@property (nonatomic, copy) NSArray *recordAudioFormatDescriptions;
-@property (nonatomic, strong) __attribute__((NSObject)) CMVideoFormatDescriptionRef recordActiveVideoFormatDescription;
-@property (nonatomic, strong) __attribute__((NSObject)) CMAudioFormatDescriptionRef recordActiveAudioFormatDescription;
-
-// keying
-
-@property (nonatomic, assign) BOOL supportsInternalKeying;
-@property (nonatomic, assign) BOOL supportsExternalKeying;
-@property (nonatomic, assign) BOOL supportsHDKeying;
-
-//@property (assign) BDDLDeviceKeyingMode keyingMode;
-//@property (assign) float keyingAlpha;
+@property (nonatomic, copy) NSArray *playbackKeyingModes;
+@property (atomic, copy) NSString *playbackActiveKeyingMode;
+@property (atomic, assign) float playbackKeyingAlpha;
 
 @end

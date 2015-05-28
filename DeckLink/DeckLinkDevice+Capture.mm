@@ -4,6 +4,7 @@
 #import "DeckLinkAPI.h"
 #import "DeckLinkAudioConnection+Internal.h"
 #import "DeckLinkDevice+Internal.h"
+#import "DeckLinkDeviceInternalInputCallback.h"
 #import "DeckLinkVideoConnection+Internal.h"
 
 
@@ -26,7 +27,7 @@
 	
 	self.captureSupported = YES;
 	
-	self.captureQueue = dispatch_queue_create("BDDLDevice.captureQueue", DISPATCH_QUEUE_SERIAL);
+	self.captureQueue = dispatch_queue_create("DeckLinkDevice.captureQueue", DISPATCH_QUEUE_SERIAL);
 	
 	IDeckLinkDisplayModeIterator *displayModeIterator = NULL;
 	if (deckLinkInput->GetDisplayModeIterator(&displayModeIterator) == S_OK)

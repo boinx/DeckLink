@@ -1,7 +1,7 @@
 #import "DeckLinkDeviceBrowser.h"
 
 #import "DeckLinkAPI.h"
-#import "DeckLinkDevice+Internal.h"
+#import "DeckLinkDevice.h"
 #import "DeckLinkDeviceBrowserInternalCallback.h"
 
 
@@ -9,6 +9,15 @@ NSString * const DeckLinkDeviceBrowserDidAddDeviceNotification = @"DeckLinkDevic
 NSString * const DeckLinkDeviceBrowserDidRemoveDeviceNotification = @"DeckLinkDeviceBrowserDidRemoveDevice";
 
 NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
+
+
+@interface DeckLinkDevice (BrowserInternal)
+
+- (instancetype)initWithDeckLink:(IDeckLink *)deckLink;
+
+@property (nonatomic, assign, readonly) IDeckLink *deckLink;
+
+@end
 
 
 @interface DeckLinkDeviceBrowser () <DeckLinkDeviceBrowserInternalCallbackDelegate>

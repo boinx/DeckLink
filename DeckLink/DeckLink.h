@@ -24,6 +24,7 @@ FOUNDATION_EXPORT const unsigned char DeckLinkVersionString[];
 #import "DeckLinkDevice.h"
 #import "DeckLinkDevice+Capture.h"
 #import "DeckLinkDevice+Devices.h"
+#import "DeckLinkDevice+Playback.h"
 
 #import "DeckLinkDeviceBrowser.h"
 
