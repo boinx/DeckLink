@@ -29,88 +29,86 @@
 	
 	self.captureQueue = dispatch_queue_create("DeckLinkDevice.captureQueue", DISPATCH_QUEUE_SERIAL);
 	
+	// Video
 	IDeckLinkDisplayModeIterator *displayModeIterator = NULL;
 	if (deckLinkInput->GetDisplayModeIterator(&displayModeIterator) == S_OK)
 	{
-		// Video
+		BMDPixelFormat pixelFormats[] = {
+			bmdFormat8BitARGB, // == kCVPixelFormatType_32ARGB == 32
+			bmdFormat8BitYUV, // == kCVPixelFormatType_422YpCbCr8 == '2vuy'
+		};
+			
+		NSMutableArray *formatDescriptions = [NSMutableArray array];
+		
+		IDeckLinkDisplayMode *displayMode = NULL;
+		while (displayModeIterator->Next(&displayMode) == S_OK)
 		{
-			BMDPixelFormat pixelFormats[] = {
-				bmdFormat8BitARGB, // == kCVPixelFormatType_32ARGB == 32
-				bmdFormat8BitYUV, // == kCVPixelFormatType_422YpCbCr8 == '2vuy'
-			};
-			
-			NSMutableArray *formatDescriptions = [NSMutableArray array];
-			
-			IDeckLinkDisplayMode *displayMode = NULL;
-			while (displayModeIterator->Next(&displayMode) == S_OK)
-			{
-				BMDDisplayMode displayModeKey = displayMode->GetDisplayMode();
+			BMDDisplayMode displayModeKey = displayMode->GetDisplayMode();
 				
-				for (size_t index = 0; index < sizeof(pixelFormats) / sizeof(*pixelFormats); ++index)
-				{
-					BMDPixelFormat pixelFormat = pixelFormats[index];
+			for (size_t index = 0; index < sizeof(pixelFormats) / sizeof(*pixelFormats); ++index)
+			{
+				BMDPixelFormat pixelFormat = pixelFormats[index];
 					
-					BMDDisplayModeSupport support = bmdDisplayModeNotSupported;
-					if (deckLinkInput->DoesSupportVideoMode(displayModeKey, pixelFormat, bmdVideoOutputFlagDefault, &support, NULL) == S_OK && support != bmdDisplayModeNotSupported)
+				BMDDisplayModeSupport support = bmdDisplayModeNotSupported;
+				if (deckLinkInput->DoesSupportVideoMode(displayModeKey, pixelFormat, bmdVideoOutputFlagDefault, &support, NULL) == S_OK && support != bmdDisplayModeNotSupported)
+				{
+					CMVideoFormatDescriptionRef formatDescription = NULL;
+					if(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, support == bmdDisplayModeSupported, &formatDescription) == noErr)
 					{
-						CMVideoFormatDescriptionRef formatDescription = NULL;
-						if(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, support == bmdDisplayModeSupported, &formatDescription) == noErr)
-						{
-							[formatDescriptions addObject:(__bridge id)formatDescription];
-							CFRelease(formatDescription);
-						}
+						[formatDescriptions addObject:(__bridge id)formatDescription];
+						CFRelease(formatDescription);
 					}
 				}
 			}
-			displayModeIterator->Release();
-			
-			self.captureVideoFormatDescriptions = formatDescriptions;
-			// TODO: get active format description from the device
 		}
+		displayModeIterator->Release();
+			
+		self.captureVideoFormatDescriptions = formatDescriptions;
+		// TODO: get active format description from the device
+	}
+	
+	// Audio
+	{
+		NSMutableArray *formatDescriptions = [NSMutableArray arrayWithCapacity:2];
 		
-		// Audio
+		// bmdAudioSampleRate48kHz / bmdAudioSampleType16bitInteger
 		{
-			NSMutableArray *formatDescriptions = [NSMutableArray arrayWithCapacity:2];
-			
-			// bmdAudioSampleRate48kHz / bmdAudioSampleType16bitInteger
+			const AudioStreamBasicDescription streamBasicDescription = { 48000.0, kAudioFormatLinearPCM, kAudioFormatFlagIsSignedInteger, 4, 1, 4, 2, 16, 0 };
+			const AudioChannelLayout channelLayout = { kAudioChannelLayoutTag_Stereo, 0 };
+				
+			NSDictionary *extensions = @{
+				(__bridge id)kCMFormatDescriptionExtension_FormatName: @"48.000 Hz, 16-bit, stereo"
+			};
+				
+			CMAudioFormatDescriptionRef formatDescription = NULL;
+			CMAudioFormatDescriptionCreate(NULL, &streamBasicDescription, sizeof(channelLayout), &channelLayout, 0, NULL, (__bridge CFDictionaryRef)extensions, &formatDescription);
+				
+			if (formatDescription != NULL)
 			{
-				const AudioStreamBasicDescription streamBasicDescription = { 48000.0, kAudioFormatLinearPCM, kAudioFormatFlagIsSignedInteger, 4, 1, 4, 2, 16, 0 };
-				const AudioChannelLayout channelLayout = { kAudioChannelLayoutTag_Stereo, 0 };
-				
-				NSDictionary *extensions = @{
-					(__bridge id)kCMFormatDescriptionExtension_FormatName: @"48.000 Hz, 16-bit, stereo"
-				};
-				
-				CMAudioFormatDescriptionRef formatDescription = NULL;
-				CMAudioFormatDescriptionCreate(NULL, &streamBasicDescription, sizeof(channelLayout), &channelLayout, 0, NULL, (__bridge CFDictionaryRef)extensions, &formatDescription);
-				
-				if (formatDescription != NULL)
-				{
-					[formatDescriptions addObject:(__bridge id)formatDescription];
-				}
+				[formatDescriptions addObject:(__bridge id)formatDescription];
 			}
-			
-			// bmdAudioSampleRate48kHz / bmdAudioSampleType32bitInteger
-			{
-				const AudioStreamBasicDescription streamBasicDescription = { 48000.0, kAudioFormatLinearPCM, kAudioFormatFlagIsSignedInteger, 8, 1, 8, 2, 32, 0 };
-				const AudioChannelLayout channelLayout = { kAudioChannelLayoutTag_Stereo, 0 };
-				
-				NSDictionary *extensions = @{
-					(__bridge id)kCMFormatDescriptionExtension_FormatName: @"48.000 Hz, 32-bit, stereo"
-				};
-				
-				CMAudioFormatDescriptionRef formatDescription = NULL;
-				CMAudioFormatDescriptionCreate(NULL, &streamBasicDescription, sizeof(channelLayout), &channelLayout, 0, NULL, (__bridge CFDictionaryRef)extensions, &formatDescription);
-				
-				if (formatDescription != NULL)
-				{
-					[formatDescriptions addObject:(__bridge id)formatDescription];
-				}
-			}
-			
-			self.captureAudioFormatDescriptions = formatDescriptions;
-			// TODO: get active format description
 		}
+			
+		// bmdAudioSampleRate48kHz / bmdAudioSampleType32bitInteger
+		{
+			const AudioStreamBasicDescription streamBasicDescription = { 48000.0, kAudioFormatLinearPCM, kAudioFormatFlagIsSignedInteger, 8, 1, 8, 2, 32, 0 };
+			const AudioChannelLayout channelLayout = { kAudioChannelLayoutTag_Stereo, 0 };
+				
+			NSDictionary *extensions = @{
+				(__bridge id)kCMFormatDescriptionExtension_FormatName: @"48.000 Hz, 32-bit, stereo"
+			};
+				
+			CMAudioFormatDescriptionRef formatDescription = NULL;
+			CMAudioFormatDescriptionCreate(NULL, &streamBasicDescription, sizeof(channelLayout), &channelLayout, 0, NULL, (__bridge CFDictionaryRef)extensions, &formatDescription);
+				
+			if (formatDescription != NULL)
+			{
+				[formatDescriptions addObject:(__bridge id)formatDescription];
+			}
+		}
+			
+		self.captureAudioFormatDescriptions = formatDescriptions;
+		// TODO: get active format description
 	}
 	
 	{

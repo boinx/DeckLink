@@ -1,16 +1,10 @@
-#import <DeckLink/DeckLink.h>
+#import "DeckLinkDevice.h"
+
+#import <CoreMedia/CoreMedia.h>
+#import <CoreVideo/CoreVideo.h>
 
 
 @interface DeckLinkDevice (Playback)
-
-@property (atomic, assign, readonly) BOOL playbackSupported;
-@property (atomic, assign, readonly) BOOL playbackActive;
-
-@property (nonatomic, copy, readonly) NSArray *playbackKeyingModes;
-@property (atomic, strong, readonly) NSString *playbackActiveKeyingMode;
-- (BOOL)setPlaybackActiveKeyingMode:(NSString *)keyingMode alpha:(float)alpha error:(NSError **)error;
-
-#if 0
 
 @property (nonatomic, copy, readonly) NSArray *playbackVideoFormatDescriptions;
 @property (atomic, strong, readonly) __attribute__((NSObject)) CMVideoFormatDescriptionRef playbackActiveVideoFormatDescription;
@@ -19,6 +13,19 @@
 @property (nonatomic, copy, readonly) NSArray *playbackAudioFormatDescriptions;
 @property (atomic, strong, readonly) __attribute__((NSObject)) CMAudioFormatDescriptionRef playbackActiveAudioFormatDescription;
 - (BOOL)setPlaybackActiveAudioFormatDescription:(CMAudioFormatDescriptionRef)formatDescription error:(NSError **)error;
+
+@property (atomic, assign, readonly) BOOL playbackSupported;
+@property (atomic, assign, readonly) BOOL playbackActive;
+
+@property (nonatomic, copy, readonly) NSArray *playbackKeyingModes;
+@property (atomic, strong, readonly) NSString *playbackActiveKeyingMode;
+- (BOOL)setPlaybackActiveKeyingMode:(NSString *)keyingMode alpha:(float)alpha error:(NSError **)error;
+
+- (void)playbackPixelBuffer:(CVPixelBufferRef)pixelBuffer;
+
+- (void)playbackContiniousAudioBufferList:(const AudioBufferList *)audioBufferList numberOfSamples:(UInt32)numberOfSamples;
+
+#if 0
 
 @property (nonatomic, copy, readonly) NSArray *playbackVideoConnections;
 @property (atomic, strong, readonly) NSString *playbackActiveVideoConnection;

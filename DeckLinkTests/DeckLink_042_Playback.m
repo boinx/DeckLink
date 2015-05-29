@@ -23,6 +23,42 @@
 	[super tearDown];
 }
 
+- (void)testVideoFormatDescriptions
+{
+	DeckLinkDevice *device = [DeckLinkDevice devicesWithIODirection:DeckLinkDeviceIODirectionPlayback].firstObject;
+	XCTAssertNotNil(device);
+	
+	NSArray *videoFormatDescriptions = device.playbackVideoFormatDescriptions;
+	XCTAssertGreaterThan(videoFormatDescriptions.count, 0);
+	
+	for (id videoFormatDescription_ in videoFormatDescriptions)
+	{
+		CMVideoFormatDescriptionRef videoFormatDescription = (__bridge CMVideoFormatDescriptionRef)videoFormatDescription_;
+		
+		NSError *error = nil;
+		XCTAssertTrue([device setPlaybackActiveVideoFormatDescription:videoFormatDescription error:&error], @"%@", error);
+		XCTAssertNil(error);
+	}
+}
+
+- (void)testAudioFormatDescriptions
+{
+	DeckLinkDevice *device = [DeckLinkDevice devicesWithIODirection:DeckLinkDeviceIODirectionPlayback].firstObject;
+	XCTAssertNotNil(device);
+	
+	NSArray *audioFormatDescriptions = device.playbackAudioFormatDescriptions;
+	XCTAssertGreaterThan(audioFormatDescriptions.count, 0);
+	
+	for (id audioFormatDescription_ in audioFormatDescriptions)
+	{
+		CMAudioFormatDescriptionRef audioFormatDescription = (__bridge CMVideoFormatDescriptionRef)audioFormatDescription_;
+		
+		NSError *error = nil;
+		XCTAssertTrue([device setPlaybackActiveAudioFormatDescription:audioFormatDescription error:&error], @"%@", error);
+		XCTAssertNil(error);
+	}
+}
+
 - (void)testKeying
 {
 	DeckLinkDevice *device = [DeckLinkDevice devicesWithIODirection:DeckLinkDeviceIODirectionPlayback].firstObject;

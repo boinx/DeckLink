@@ -4,6 +4,7 @@
 #import "DeckLinkDevice.h"
 #import "DeckLinkDevice+Capture.h"
 #import "DeckLinkDeviceInternalInputCallback.h"
+#import "DeckLinkDeviceInternalOutputCallback.h"
 
 
 @interface DeckLinkDevice ()
@@ -16,7 +17,7 @@
 	IDeckLinkOutput *deckLinkOutput;
 	
 	DeckLinkDeviceInternalInputCallback *deckLinkInputCallback;
-//	BDDLDeviceInternalOutputCallback *outputCallback;
+	DeckLinkDeviceInternalOutputCallback *deckLinkOutputCallback;
 }
 
 - (instancetype)initWithDeckLink:(IDeckLink *)deckLink;
@@ -39,11 +40,11 @@
 @property (nonatomic, copy) NSArray *captureVideoFormatDescriptions;
 @property (atomic, strong) __attribute__((NSObject)) CMVideoFormatDescriptionRef captureActiveVideoFormatDescription;
 
-@property (nonatomic, copy) NSArray *captureVideoConnections;
-@property (atomic, strong) NSString *captureActiveVideoConnection;
-
 @property (nonatomic, copy) NSArray *captureAudioFormatDescriptions;
 @property (atomic, strong) __attribute__((NSObject)) CMAudioFormatDescriptionRef captureActiveAudioFormatDescription;
+
+@property (nonatomic, copy) NSArray *captureVideoConnections;
+@property (atomic, strong) NSString *captureActiveVideoConnection;
 
 @property (nonatomic, copy) NSArray *captureAudioConnections;
 @property (atomic, strong) NSString *captureActiveAudioConnection;
@@ -62,6 +63,12 @@
 @property (atomic, assign) BOOL playbackActive;
 
 @property (nonatomic, strong) dispatch_queue_t playbackQueue;
+
+@property (nonatomic, copy) NSArray *playbackVideoFormatDescriptions;
+@property (atomic, strong) __attribute__((NSObject)) CMVideoFormatDescriptionRef playbackActiveVideoFormatDescription;
+
+@property (nonatomic, copy) NSArray *playbackAudioFormatDescriptions;
+@property (atomic, strong) __attribute__((NSObject)) CMAudioFormatDescriptionRef playbackActiveAudioFormatDescription;
 
 @property (nonatomic, copy) NSArray *playbackKeyingModes;
 @property (atomic, copy) NSString *playbackActiveKeyingMode;

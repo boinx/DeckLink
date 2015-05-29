@@ -97,6 +97,7 @@
 	XCTAssertTrue([device isKindOfClass:DeckLinkDevice.class]);
 	
 	[self.expectation fulfill];
+	self.expectation = nil;
 }
 
 @end
