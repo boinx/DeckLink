@@ -52,7 +52,7 @@
 		5061EB6F1B17A8A0003552DE /* DeckLinkAudioConnection+Internal.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5061EB6D1B17A8A0003552DE /* DeckLinkAudioConnection+Internal.mm */; };
 		5061EB721B17AF82003552DE /* DeckLinkDevice+Playback.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB701B17AF82003552DE /* DeckLinkDevice+Playback.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5061EB731B17AF82003552DE /* DeckLinkDevice+Playback.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5061EB711B17AF82003552DE /* DeckLinkDevice+Playback.mm */; };
-		5061EB761B17AFEF003552DE /* DeckLinkKeying.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB741B17AFEF003552DE /* DeckLinkKeying.h */; };
+		5061EB761B17AFEF003552DE /* DeckLinkKeying.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB741B17AFEF003552DE /* DeckLinkKeying.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		5061EB771B17AFEF003552DE /* DeckLinkKeying.m in Sources */ = {isa = PBXBuildFile; fileRef = 5061EB751B17AFEF003552DE /* DeckLinkKeying.m */; };
 		5061EB7D1B17B90C003552DE /* DeckLinkDevice+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 5061EB7C1B17B90C003552DE /* DeckLinkDevice+Internal.h */; };
 		5061EB7F1B17BA36003552DE /* DeckLink_042_Playback.m in Sources */ = {isa = PBXBuildFile; fileRef = 5061EB7E1B17BA36003552DE /* DeckLink_042_Playback.m */; };

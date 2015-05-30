@@ -19,6 +19,10 @@ FOUNDATION_EXPORT const unsigned char DeckLinkVersionString[];
 
 #import "CMFormatDescription+DeckLink.h"
 
+#import "DeckLinkAudioConnection.h"
+#import "DeckLinkKeying.h"
+#import "DeckLinkVideoConnection.h"
+
 #import "DeckLinkInformation.h"
 
 #import "DeckLinkDevice.h"

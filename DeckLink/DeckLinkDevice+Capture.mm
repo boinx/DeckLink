@@ -275,24 +275,32 @@
 	__block BOOL result = NO;
 	__block NSError *error = nil;
 
-	dispatch_sync(self.captureQueue, ^{
-		BMDVideoConnection videoConnection = DeckLinkVideoConnectionToBMDVideoConnection(connection);
-		if (videoConnection == 0)
-		{
-			error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
-			return;
-		}
+	dispatch_queue_t captureQueue = self.captureQueue;
+	if (captureQueue == nil)
+	{
+		error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
+	}
+	else
+	{
+		dispatch_sync(captureQueue, ^{
+			BMDVideoConnection videoConnection = DeckLinkVideoConnectionToBMDVideoConnection(connection);
+			if (videoConnection == 0)
+			{
+				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
+				return;
+			}
 		
-		HRESULT status = deckLinkConfiguration->SetInt(bmdDeckLinkConfigVideoInputConnection, videoConnection);
-		if (status != S_OK)
-		{
-			error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-			return;
-		}
+			HRESULT status = deckLinkConfiguration->SetInt(bmdDeckLinkConfigVideoInputConnection, videoConnection);
+			if (status != S_OK)
+			{
+				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+				return;
+			}
 		
-		self.captureActiveVideoConnection = connection;
-		result = YES;
-	});
+			self.captureActiveVideoConnection = connection;
+			result = YES;
+		});
+	}
 	
 	if (error != nil)
 	{
