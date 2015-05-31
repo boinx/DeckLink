@@ -287,7 +287,7 @@
 		}
 		else
 		{
-			if (![keyingMode isEqualToString:DeckLinkKeyingModeNone])
+			if (keyingMode != nil)
 			{
 				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:paramErr userInfo:nil];
 				return;
