@@ -190,6 +190,7 @@
 		}
 		
 		self.captureActiveVideoFormatDescription = formatDescription;
+		self.capturePixelBufferPool = nil;
 		result = YES;
 	});
 	
@@ -588,7 +589,7 @@
 			memcpy(outputBuffer, inputBuffer, frameCount * frameSize);
 			
 			CMBlockBufferRef dataBuffer = NULL;
-			CMBlockBufferCreateWithMemoryBlock(NULL, outputBuffer, frameCount * 4, NULL, NULL, 0, frameCount * frameSize, kCMBlockBufferAssureMemoryNowFlag, &dataBuffer);
+			CMBlockBufferCreateWithMemoryBlock(NULL, outputBuffer, frameCount * basicStreamDescription->mBytesPerFrame, NULL, NULL, 0, frameCount * frameSize, kCMBlockBufferAssureMemoryNowFlag, &dataBuffer);
 			
 			CMSampleBufferRef sampleBuffer = NULL;
 			OSStatus status = CMSampleBufferCreate(NULL, dataBuffer, YES, NULL, NULL, formatDescription, frameCount, 1, &timingInfo, 1, &frameSize, &sampleBuffer);
