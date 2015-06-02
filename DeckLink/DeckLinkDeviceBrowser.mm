@@ -68,18 +68,17 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 
 - (void)dealloc
 {
-	[self stop];
+	if(discovery != NULL)
+	{
+		discovery->UninstallDeviceNotifications();
+		discovery->Release();
+		discovery = NULL;
+	}
 	
 	if(callback != NULL)
 	{
 		callback->Release();
 		callback = NULL;
-	}
-	
-	if(discovery != NULL)
-	{
-		discovery->Release();
-		discovery = NULL;
 	}
 }
 
@@ -104,7 +103,6 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 	__block DeckLinkDevice *connectedDevice = nil;
 	
 	dispatch_sync(self.devicesQueue, ^{
-#if 0
 		NSSet *devices = self.devices;
 		
 		for(DeckLinkDevice *device in devices)
@@ -124,7 +122,6 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 				return;
 			}
 		}
-#endif
 	});
 	
 	return connectedDevice;
