@@ -262,7 +262,7 @@
 	dispatch_sync(self.playbackQueue, ^{
 		if (deckLinkKeyer != NULL)
 		{
-			HRESULT status = 0;
+			HRESULT status = E_NOTIMPL;
 			
 			if ([keyingMode isEqualToString:DeckLinkKeyingModeNone])
 			{
