@@ -8,6 +8,21 @@
 #import "DeckLinkVideoConnection+Internal.h"
 
 
+static void * const CaptureQueueIdentitiy = (void *)&CaptureQueueIdentitiy;
+
+static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_block_t block)
+{
+	if (dispatch_queue_get_specific(queue, CaptureQueueIdentitiy) != NULL)
+	{
+		block();
+	}
+	else
+	{
+		dispatch_sync(queue, block);
+	}
+}
+
+
 @implementation DeckLinkDevice (Capture)
 
 - (void)setupCapture
@@ -27,7 +42,9 @@
 	
 	self.captureSupported = YES;
 	
-	self.captureQueue = dispatch_queue_create("DeckLinkDevice.captureQueue", DISPATCH_QUEUE_SERIAL);
+	dispatch_queue_t captureQueue = dispatch_queue_create("DeckLinkDevice.captureQueue", DISPATCH_QUEUE_SERIAL);
+	dispatch_queue_set_specific(captureQueue, CaptureQueueIdentitiy, (__bridge void *)self, NULL);
+	self.captureQueue = captureQueue;
 	
 	// Video
 	IDeckLinkDisplayModeIterator *displayModeIterator = NULL;
@@ -137,7 +154,7 @@
 	__block BOOL result = NO;
 	__block NSError *error = nil;
 	
-	dispatch_sync(self.captureQueue, ^{
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
 		if (formatDescription != NULL)
 		{
 			if (![self.captureVideoFormatDescriptions containsObject:(__bridge id)formatDescription])
@@ -214,7 +231,7 @@
 	__block BOOL result = NO;
 	__block NSError *error = nil;
 	
-	dispatch_sync(self.captureQueue, ^{
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
 		if (formatDescription != NULL)
 		{
 			if (![self.captureAudioFormatDescriptions containsObject:(__bridge id)formatDescription])
@@ -283,7 +300,7 @@
 	}
 	else
 	{
-		dispatch_sync(captureQueue, ^{
+		CaptureQueue_dispatch_sync(captureQueue, ^{
 			BMDVideoConnection videoConnection = DeckLinkVideoConnectionToBMDVideoConnection(connection);
 			if (videoConnection == 0)
 			{
@@ -323,7 +340,7 @@
 	__block BOOL result = NO;
 	__block NSError *error = nil;
 
-	dispatch_sync(self.captureQueue, ^{
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
 		BMDAudioConnection audioConnection = DeckLinkAudioConnectionToBMDAudioConnection(connection);
 		if (audioConnection == 0)
 		{
@@ -364,7 +381,7 @@
 		queue = dispatch_get_main_queue();
 	}
 	
-	dispatch_sync(self.captureQueue, ^{
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
 		self.captureVideoDelegate = delegate;
 		self.captureVideoDelegateQueue = queue;
 	});
@@ -377,7 +394,7 @@
 		queue = dispatch_get_main_queue();
 	}
 	
-	dispatch_sync(self.captureQueue, ^{
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
 		self.captureAudioDelegate = delegate;
 		self.captureAudioDelegateQueue = queue;
 	});
@@ -387,7 +404,7 @@
 {
 	__block BOOL result = NO;
 	__block NSError *error = nil;
-	dispatch_sync(self.captureQueue, ^{
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
 		if (self.captureActive)
 		{
 			result = YES;
@@ -421,7 +438,7 @@
 
 - (void)stopCapture
 {
-	dispatch_sync(self.captureQueue, ^{
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
 		if (!self.captureActive)
 		{
 			return;
@@ -447,7 +464,7 @@
 		audioPacket->AddRef();
 	}
 	
-	dispatch_sync(self.captureQueue, ^{
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
 		if(videoFrame != NULL)
 		{
 			CMVideoFormatDescriptionRef videoFormatDescription = self.captureActiveVideoFormatDescription;
@@ -622,10 +639,46 @@
 
 - (void)didChangeVideoFormat:(BMDVideoInputFormatChangedEvents)changes displayMode:(IDeckLinkDisplayMode *)displayMode flags:(BMDDetectedVideoInputFormatFlags)flags
 {
-	dispatch_async(self.captureQueue, ^{
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
 		self.capturePixelBufferPool = nil;
 		
-		// TODO: update activeVideoFormatDescription
+		BMDDisplayMode displayModeValue = displayMode->GetDisplayMode();
+		BMDDisplayMode pixelFormat = 0;
+		if (flags & bmdDetectedVideoInputYCbCr422)
+		{
+			pixelFormat = bmdFormat8BitYUV;
+		}
+		else if (flags & bmdDetectedVideoInputRGB444)
+		{
+			pixelFormat = bmdFormat8BitARGB;
+		}
+		
+		for (id captureVideoFormatDescription_ in self.captureVideoFormatDescriptions)
+		{
+			CMVideoFormatDescriptionRef captureVideoFormatDescription = (__bridge CMVideoFormatDescriptionRef)captureVideoFormatDescription_;
+			
+			NSNumber *displayMode2 = (__bridge NSNumber *)CMFormatDescriptionGetExtension(captureVideoFormatDescription, DeckLinkFormatDescriptionDisplayModeKey);
+			
+			if (displayModeValue == displayMode2.intValue && pixelFormat == CMVideoFormatDescriptionGetCodecType(captureVideoFormatDescription))
+			{
+				NSError *error = nil;
+				if ([self setCaptureActiveVideoFormatDescription:captureVideoFormatDescription error:&error])
+				{
+					id<DeckLinkDeviceCaptureVideoDelegate> delegate = self.captureVideoDelegate;
+					dispatch_queue_t queue = self.captureVideoDelegateQueue;
+					if(delegate != nil && queue != nil)
+					{
+						dispatch_async(queue, ^{
+							if([delegate respondsToSelector:@selector(DeckLinkDevice:didChangeActiveVideoFormatDescription:)])
+							{
+								[delegate DeckLinkDevice:self didChangeActiveVideoFormatDescription:captureVideoFormatDescription];
+							}
+						});
+					}
+				}
+				break;
+			}
+		}
 	});
 }
 

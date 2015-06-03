@@ -9,6 +9,8 @@
 - (void)DeckLinkDevice:(DeckLinkDevice *)device didCaptureVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer;
 - (void)DeckLinkDevice:(DeckLinkDevice *)device didDropVideoSampleBuffer:(CMSampleBufferRef)sampleBuffer;
 
+- (void)DeckLinkDevice:(DeckLinkDevice *)device didChangeActiveVideoFormatDescription:(CMVideoFormatDescriptionRef)videoFormatDescription;
+
 @end
 
 @protocol DeckLinkDeviceCaptureAudioDelegate <NSObject>
