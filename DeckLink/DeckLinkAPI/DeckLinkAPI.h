@@ -296,6 +296,9 @@ enum _BMDDeckLinkAttributeID {
     BMDDeckLinkSupportsClockTimingAdjustment                     = 'ctad',
     BMDDeckLinkSupportsFullDuplex                                = 'fdup',
     BMDDeckLinkSupportsFullFrameReferenceInputTimingOffset       = 'frin',
+    BMDDeckLinkSupportsSMPTELevelAOutput                         = 'lvla',
+    BMDDeckLinkSupportsDualLinkSDI                               = 'sdls',
+    BMDDeckLinkSupportsIdleOutput                                = 'idou',
 
     /* Integers */
 

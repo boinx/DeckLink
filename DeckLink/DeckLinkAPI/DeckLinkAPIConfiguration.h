@@ -75,6 +75,8 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigSingleLinkVideoOutput                       = 'sglo',
     bmdDeckLinkConfigBlackVideoOutputDuringCapture               = 'bvoc',
     bmdDeckLinkConfigLowLatencyVideoOutput                       = 'llvo',
+    bmdDeckLinkConfigDownConversionOnAllAnalogOutput             = 'caao',
+    bmdDeckLinkConfigSMPTELevelAOutput                           = 'smta',
 
     /* Video Output Integers */
 
@@ -144,7 +146,16 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigAnalogAudioOutputScaleChannel2              = 'aos2',
     bmdDeckLinkConfigAnalogAudioOutputScaleChannel3              = 'aos3',
     bmdDeckLinkConfigAnalogAudioOutputScaleChannel4              = 'aos4',
-    bmdDeckLinkConfigDigitalAudioOutputScale                     = 'daos'
+    bmdDeckLinkConfigDigitalAudioOutputScale                     = 'daos',
+
+    /* Device Information Strings */
+
+    bmdDeckLinkConfigDeviceInformationLabel                      = 'dila',
+    bmdDeckLinkConfigDeviceInformationSerialNumber               = 'disn',
+    bmdDeckLinkConfigDeviceInformationCompany                    = 'dico',
+    bmdDeckLinkConfigDeviceInformationPhone                      = 'diph',
+    bmdDeckLinkConfigDeviceInformationEmail                      = 'diem',
+    bmdDeckLinkConfigDeviceInformationDate                       = 'dida'
 };
 
 // Forward Declarations
