@@ -42,7 +42,7 @@
 
 // Interface ID Declarations
 
-BMD_CONST REFIID IID_IDeckLinkConfiguration                       = /* 1E69FCF6-4203-4936-8076-2A9F4CFD50CB */ {0x1E,0x69,0xFC,0xF6,0x42,0x03,0x49,0x36,0x80,0x76,0x2A,0x9F,0x4C,0xFD,0x50,0xCB};
+BMD_CONST REFIID IID_IDeckLinkConfiguration                       = /* CB71734A-FE37-4E8D-8E13-802133A1C3F2 */ {0xCB,0x71,0x73,0x4A,0xFE,0x37,0x4E,0x8D,0x8E,0x13,0x80,0x21,0x33,0xA1,0xC3,0xF2};
 
 /* Enum BMDDeckLinkConfigurationID - DeckLink Configuration ID */
 
@@ -72,7 +72,6 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigFieldFlickerRemoval                         = 'fdfr',
     bmdDeckLinkConfigHD1080p24ToHD1080i5994Conversion            = 'to59',
     bmdDeckLinkConfig444SDIVideoOutput                           = '444o',
-    bmdDeckLinkConfigSingleLinkVideoOutput                       = 'sglo',
     bmdDeckLinkConfigBlackVideoOutputDuringCapture               = 'bvoc',
     bmdDeckLinkConfigLowLatencyVideoOutput                       = 'llvo',
     bmdDeckLinkConfigDownConversionOnAllAnalogOutput             = 'caao',
@@ -87,6 +86,7 @@ enum _BMDDeckLinkConfigurationID {
     bmdDeckLinkConfigVideoOutputIdleOperation                    = 'voio',
     bmdDeckLinkConfigDefaultVideoOutputMode                      = 'dvom',
     bmdDeckLinkConfigDefaultVideoOutputModeFlags                 = 'dvof',
+    bmdDeckLinkConfigSDIOutputLinkConfiguration                  = 'solc',
 
     /* Video Output Floats */
 
