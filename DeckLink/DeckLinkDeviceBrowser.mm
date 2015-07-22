@@ -185,6 +185,11 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 		}
 		
 		DeckLinkDevice *device = [[DeckLinkDevice alloc] initWithDeckLink:deckLink];
+		if (device == nil)
+		{
+			return;
+		}
+		
 		[self.devices addObject:device];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
