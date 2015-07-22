@@ -210,12 +210,12 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 
 - (void)didRemoveDeckLink:(IDeckLink *)deckLink
 {
-#if 0
+	__block DeckLinkDevice *removedDevice = nil;
+
 	dispatch_sync(self.devicesQueue, ^{
 		NSMutableSet *devices = self.devices;
-		BDDLDevice *removedDevice = nil;
 		
-		for(BDDLDevice *device in devices)
+		for(DeckLinkDevice *device in devices)
 		{
 			if(device.deckLink == deckLink)
 			{
@@ -227,23 +227,27 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 		if(removedDevice != nil)
 		{
 			[devices removeObject:removedDevice];
-			
-			dispatch_async(dispatch_get_main_queue(), ^{
-				NSDictionary *userInfo = @{
-										   BDDLDeviceBrowserDeviceKey: removedDevice
-										   };
-				
-				[NSNotificationCenter.defaultCenter postNotificationName:BDDLDeviceBrowserDidRemoveDeviceNotification object:self userInfo:userInfo];
-				
-				id<BDDLDeviceBrowserDelegate> delegate = self.delegate;
-				if([delegate respondsToSelector:@selector(BDDLDeviceBrowser:didRemoveDevice:)])
-				{
-					[delegate BDDLDeviceBrowser:self didRemoveDevice:removedDevice];
-				}
-			});
 		}
 	});
-#endif
+	
+	if (removedDevice == nil)
+	{
+		return;
+	}
+	
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSDictionary *userInfo = @{
+			DeckLinkDeviceBrowserDeviceKey: removedDevice
+		};
+				
+		[NSNotificationCenter.defaultCenter postNotificationName:DeckLinkDeviceBrowserDidRemoveDeviceNotification object:self userInfo:userInfo];
+				
+		id<DeckLinkDeviceBrowserDelegate> delegate = self.delegate;
+		if([delegate respondsToSelector:@selector(DeckLinkDeviceBrowser:didRemoveDevice:)])
+		{
+			[delegate DeckLinkDeviceBrowser:self didRemoveDevice:removedDevice];
+		}
+	});
 }
 
 @end

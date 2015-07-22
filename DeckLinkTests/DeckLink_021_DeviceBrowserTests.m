@@ -89,6 +89,36 @@
 	}];
 }
 
+#if defined(DECKLINK_ALLOW_MANUAL_TESTS) && (DECKLINK_ALLOW_MANUAL_TESTS > 0)
+- (void)testDeviceBrowserRemoveNotification
+{
+	DeckLinkDeviceBrowser *browser = [[DeckLinkDeviceBrowser alloc] init];
+	XCTAssertNotNil(browser);
+	
+	XCTAssertTrue([browser start]);
+
+	NSLog(@"UNPLUG A DECKLINK DEVICE");
+	
+	[self expectationForNotification:DeckLinkDeviceBrowserDidRemoveDeviceNotification object:browser handler:^BOOL(NSNotification *notification) {
+		return YES;
+	}];
+	
+	[self waitForExpectationsWithTimeout:60.0 handler:^(NSError *error) {
+
+	}];
+	
+	NSLog(@"PLUG IN A DECKLINK DEVICE");
+	
+	[self expectationForNotification:DeckLinkDeviceBrowserDidAddDeviceNotification object:browser handler:^BOOL(NSNotification *notification) {
+		return YES;
+	}];
+	
+	[self waitForExpectationsWithTimeout:60.0 handler:^(NSError *error) {
+		[browser stop];
+	}];
+}
+#endif
+
 #pragma mark - DeckLinkDeviceBrowserDelegate
 
 - (void)DeckLinkDeviceBrowser:(DeckLinkDeviceBrowser *)deviceBrowser didAddDevice:(DeckLinkDevice *)device
