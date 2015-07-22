@@ -155,56 +155,56 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 
 - (void)didAddDeckLink:(IDeckLink *)deckLink
 {
+	DeckLinkDeviceIODirection direction = self.direction;
+	
+	IDeckLinkAttributes *deckLinkAttributes = NULL;
+	if (deckLink->QueryInterface(IID_IDeckLinkAttributes, (void **)&deckLinkAttributes) != S_OK)
+	{
+		return;
+	}
+	
+	int64_t support = 0;
+	deckLinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &support);
+	
+	BOOL match = NO;
+	if (support & bmdDeviceSupportsCapture && direction & DeckLinkDeviceIODirectionCapture)
+	{
+		match = YES;
+	}
+	else if (support & bmdDeviceSupportsPlayback && direction & DeckLinkDeviceIODirectionPlayback)
+	{
+		match = YES;
+	}
+	
+	deckLinkAttributes->Release();
+	
+	if (!match)
+	{
+		return;
+	}
+	
+	DeckLinkDevice *device = [[DeckLinkDevice alloc] initWithDeckLink:deckLink];
+	if (device == nil)
+	{
+		return;
+	}
+	
 	dispatch_sync(self.devicesQueue, ^{
-		DeckLinkDeviceIODirection direction = self.direction;
-		
-		IDeckLinkAttributes *deckLinkAttributes = NULL;
-		if (deckLink->QueryInterface(IID_IDeckLinkAttributes, (void **)&deckLinkAttributes) != S_OK)
-		{
-			return;
-		}
-		
-		int64_t support = 0;
-		deckLinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &support);
-		
-		BOOL match = NO;
-		if (support & bmdDeviceSupportsCapture && direction & DeckLinkDeviceIODirectionCapture)
-		{
-			match = YES;
-		}
-		else if (support & bmdDeviceSupportsPlayback && direction & DeckLinkDeviceIODirectionPlayback)
-		{
-			match = YES;
-		}
-		
-		deckLinkAttributes->Release();
-		
-		if (!match)
-		{
-			return;
-		}
-		
-		DeckLinkDevice *device = [[DeckLinkDevice alloc] initWithDeckLink:deckLink];
-		if (device == nil)
-		{
-			return;
-		}
-		
 		[self.devices addObject:device];
+	});
 		
-		dispatch_async(dispatch_get_main_queue(), ^{
-			NSDictionary *userInfo = @{
-				DeckLinkDeviceBrowserDeviceKey: device
-			};
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSDictionary *userInfo = @{
+			DeckLinkDeviceBrowserDeviceKey: device
+		};
 			
-			[NSNotificationCenter.defaultCenter postNotificationName:DeckLinkDeviceBrowserDidAddDeviceNotification object:self userInfo:userInfo];
+		[NSNotificationCenter.defaultCenter postNotificationName:DeckLinkDeviceBrowserDidAddDeviceNotification object:self userInfo:userInfo];
 			
-			id<DeckLinkDeviceBrowserDelegate> delegate = self.delegate;
-			if([delegate respondsToSelector:@selector(DeckLinkDeviceBrowser:didAddDevice:)])
-			{
-				[delegate DeckLinkDeviceBrowser:self didAddDevice:device];
-			}
-		});
+		id<DeckLinkDeviceBrowserDelegate> delegate = self.delegate;
+		if([delegate respondsToSelector:@selector(DeckLinkDeviceBrowser:didAddDevice:)])
+		{
+			[delegate DeckLinkDeviceBrowser:self didAddDevice:device];
+		}
 	});
 }
 
