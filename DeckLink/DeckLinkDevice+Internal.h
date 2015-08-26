@@ -34,6 +34,7 @@
 
 @property (atomic, assign) BOOL captureSupported;
 @property (atomic, assign) BOOL captureActive;
+@property (atomic, assign) BOOL captureInputSourceConnected;
 
 @property (nonatomic, strong) dispatch_queue_t captureQueue;
 

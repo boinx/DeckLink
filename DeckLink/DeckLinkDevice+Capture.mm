@@ -416,7 +416,8 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 			error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
 			return;
 		}
-		
+
+		self.captureInputSourceConnected = YES; // We assume an input source is connected when start capturing
 		self.captureActive = YES;
 		result = YES;
 	});
@@ -446,6 +447,7 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 		deckLinkInput->StopStreams();
 		
 		self.captureActive = NO;
+		self.captureInputSourceConnected = NO;
 	});
 }
 
@@ -485,13 +487,13 @@ void videoFrameReleaseCallback(void *releaseRefCon, const void *baseAddress)
 			long height = videoFrame->GetHeight();
 			long bytesPerRow = videoFrame->GetRowBytes();
 			
-#if 0
 			BMDFrameFlags flags = videoFrame->GetFlags();
-			if (flags & bmdFrameHasNoInputSource)
+			
+			BOOL captureInputSourceConnected = (flags & bmdFrameHasNoInputSource) != 0;
+			if (self.captureInputSourceConnected != captureInputSourceConnected)
 			{
-				
+				self.captureInputSourceConnected = captureInputSourceConnected;
 			}
-#endif
 			
 			void *baseAddress = NULL;
 			videoFrame->GetBytes(&baseAddress);

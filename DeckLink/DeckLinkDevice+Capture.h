@@ -23,7 +23,18 @@
 @interface DeckLinkDevice (Capture)
 
 @property (atomic, assign, readonly) BOOL captureSupported;
+
+/**
+ * Set if the capturing was started.
+ * Use startCaptureWithError: and stopCapture.
+ */
 @property (atomic, assign, readonly) BOOL captureActive;
+
+/**
+ * Set if an input device (Camera) is connected to the decklink device (Ultra Studio.
+ * This property is only valid when captureActive == YES
+ */
+@property (atomic, assign, readonly) BOOL captureInputSourceConnected;
 
 @property (nonatomic, copy, readonly) NSArray *captureVideoFormatDescriptions;
 @property (atomic, strong, readonly) __attribute__((NSObject)) CMVideoFormatDescriptionRef captureActiveVideoFormatDescription;
