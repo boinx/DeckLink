@@ -12,7 +12,7 @@ static void * const CaptureQueueIdentitiy = (void *)&CaptureQueueIdentitiy;
 
 static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_block_t block)
 {
-	if (dispatch_queue_get_specific(queue, CaptureQueueIdentitiy) != NULL)
+	if (dispatch_get_specific(CaptureQueueIdentitiy) == (__bridge void *)queue)
 	{
 		block();
 	}
@@ -43,7 +43,7 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	self.captureSupported = YES;
 	
 	dispatch_queue_t captureQueue = dispatch_queue_create("DeckLinkDevice.captureQueue", DISPATCH_QUEUE_SERIAL);
-	dispatch_queue_set_specific(captureQueue, CaptureQueueIdentitiy, (__bridge void *)self, NULL);
+	dispatch_queue_set_specific(captureQueue, CaptureQueueIdentitiy, (__bridge void *)captureQueue, NULL);
 	self.captureQueue = captureQueue;
 	
 	// Video
