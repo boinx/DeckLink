@@ -453,12 +453,17 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 
 #pragma mark - DeckLinkDeviceInternalInputCallbackDelegate
 
-void videoFrameReleaseCallback(void *releaseRefCon, const void *baseAddress)
+static void videoFrameReleaseCallback(void *context, const void *memory)
 {
-	IDeckLinkVideoInputFrame *videoFrame = (IDeckLinkVideoInputFrame *)releaseRefCon;
+	IDeckLinkVideoInputFrame *videoFrame = (IDeckLinkVideoInputFrame *)context;
 	videoFrame->Release();
 }
 
+static void audioPacketReleaseCallback(void *context, void *memory, size_t sizeInBytes)
+{
+	IDeckLinkAudioInputPacket *audioPacket = (IDeckLinkAudioInputPacket *)context;
+	audioPacket->Release();
+}
 
 - (void)didReceiveVideoFrame:(IDeckLinkVideoInputFrame *)videoFrame audioPacket:(IDeckLinkAudioInputPacket *)audioPacket
 {
@@ -575,17 +580,31 @@ void videoFrameReleaseCallback(void *releaseRefCon, const void *baseAddress)
 			BMDTimeValue packetTime = 0;
 			audioPacket->GetPacketTime(&packetTime, basicStreamDescription->mSampleRate);
 			
-			CMSampleTimingInfo timingInfo = { CMTimeMake(1, basicStreamDescription->mSampleRate), CMTimeMake(packetTime, basicStreamDescription->mSampleRate), kCMTimeInvalid };
+			CMSampleTimingInfo timingInfo = {
+				CMTimeMake(1, basicStreamDescription->mSampleRate),
+				CMTimeMake(packetTime, basicStreamDescription->mSampleRate),
+				kCMTimeInvalid
+			};
 			const size_t frameSize = basicStreamDescription->mBytesPerFrame;
 			
-			void *inputBuffer = NULL;
-			audioPacket->GetBytes(&inputBuffer);
+			void *audioSamples = NULL;
+			audioPacket->GetBytes(&audioSamples);
 			
-			void *outputBuffer = malloc(frameCount * frameSize);
-			memcpy(outputBuffer, inputBuffer, frameCount * frameSize);
+			CMBlockBufferCustomBlockSource customBlockSource = {
+				kCMBlockBufferCustomBlockSourceVersion,
+				NULL,
+				audioPacketReleaseCallback,
+				audioPacket,
+			};
 			
 			CMBlockBufferRef dataBuffer = NULL;
-			CMBlockBufferCreateWithMemoryBlock(NULL, outputBuffer, frameCount * basicStreamDescription->mBytesPerFrame, NULL, NULL, 0, frameCount * frameSize, kCMBlockBufferAssureMemoryNowFlag, &dataBuffer);
+			const CVReturn dataBufferStatus = CMBlockBufferCreateWithMemoryBlock(NULL, audioSamples, frameCount * basicStreamDescription->mBytesPerFrame, NULL, &customBlockSource, 0, frameCount * frameSize, kCMBlockBufferAssureMemoryNowFlag, &dataBuffer);
+			if (dataBufferStatus != kCVReturnSuccess)
+			{
+				return;
+			}
+			
+			audioPacket->AddRef(); // audioPacket will be released by audioPacketReleaseCallback
 			
 			CMSampleBufferRef sampleBuffer = NULL;
 			OSStatus status = CMSampleBufferCreate(NULL, dataBuffer, YES, NULL, NULL, formatDescription, frameCount, 1, &timingInfo, 1, &frameSize, &sampleBuffer);
