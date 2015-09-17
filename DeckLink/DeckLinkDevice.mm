@@ -61,13 +61,13 @@
 		}
 		
 		int64_t persistantID = 0;
-		if (deckLinkAttributes->GetInt(BMDDeckLinkPersistentID, &persistantID) == S_OK)
+		if(deckLinkAttributes->GetInt(BMDDeckLinkPersistentID, &persistantID) == S_OK)
 		{
 			self.persistantID = (int32_t)persistantID;
 		}
 		
 		int64_t topologicalID = 0;
-		if (deckLinkAttributes->GetInt(BMDDeckLinkTopologicalID, &topologicalID) == S_OK)
+		if(deckLinkAttributes->GetInt(BMDDeckLinkTopologicalID, &topologicalID) == S_OK)
 		{
 			self.topologicalID = (int32_t)topologicalID;
 		}
