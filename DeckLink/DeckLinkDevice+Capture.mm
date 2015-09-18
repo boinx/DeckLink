@@ -207,6 +207,7 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 		}
 		
 		self.captureActiveVideoFormatDescription = formatDescription;
+		self.capturePixelBufferPool = nil;
 		result = YES;
 	});
 	
@@ -453,15 +454,18 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 
 #pragma mark - DeckLinkDeviceInternalInputCallbackDelegate
 
-void videoFrameReleaseCallback(void *releaseRefCon, const void *baseAddress)
-{
-	IDeckLinkVideoInputFrame *videoFrame = (IDeckLinkVideoInputFrame *)releaseRefCon;
-	videoFrame->Release();
-}
-
-
 - (void)didReceiveVideoFrame:(IDeckLinkVideoInputFrame *)videoFrame audioPacket:(IDeckLinkAudioInputPacket *)audioPacket
 {
+	if (videoFrame != NULL)
+	{
+		videoFrame->AddRef();
+	}
+	
+	if (audioPacket != NULL)
+	{
+		audioPacket->AddRef();
+	}
+	
 	CaptureQueue_dispatch_sync(self.captureQueue, ^{
 		if(videoFrame != NULL)
 		{
@@ -485,7 +489,7 @@ void videoFrameReleaseCallback(void *releaseRefCon, const void *baseAddress)
 			CMPixelFormatType pixelFormat = videoFrame->GetPixelFormat();
 			long width = videoFrame->GetWidth();
 			long height = videoFrame->GetHeight();
-			long bytesPerRow = videoFrame->GetRowBytes();
+			long rowBytes = videoFrame->GetRowBytes();
 			
 			BMDFrameFlags flags = videoFrame->GetFlags();
 			
@@ -495,33 +499,55 @@ void videoFrameReleaseCallback(void *releaseRefCon, const void *baseAddress)
 				self.captureInputSourceConnected = captureInputSourceConnected;
 			}
 			
-			void *baseAddress = NULL;
-			videoFrame->GetBytes(&baseAddress);
+			void *inputBuffer = NULL;
+			videoFrame->GetBytes(&inputBuffer);
 			
-			NSDictionary *pixelBufferAttributes = @{
-				(__bridge NSString *)kCVPixelBufferOpenGLCompatibilityKey: @YES,
-				(__bridge NSString *)kCVPixelBufferIOSurfacePropertiesKey: @{
-					(__bridge NSString *)kCVPixelBufferIOSurfaceOpenGLTextureCompatibilityKey: @YES,
-				},
-			};
+			CVPixelBufferPoolRef pixelBufferPool = self.capturePixelBufferPool;
+			if(pixelBufferPool == nil)
+			{
+				NSDictionary *pixelBufferAttributes = @{
+					(__bridge NSString *)kCVPixelBufferPixelFormatTypeKey: @(pixelFormat),
+					(__bridge NSString *)kCVPixelBufferWidthKey: @(width),
+					(__bridge NSString *)kCVPixelBufferHeightKey: @(height),
+					(__bridge NSString *)kCVPixelBufferBytesPerRowAlignmentKey: @(rowBytes),
+					(__bridge NSString *)kCVPixelBufferOpenGLCompatibilityKey: @YES,
+					(__bridge NSString *)kCVPixelBufferIOSurfacePropertiesKey: @{
+						(__bridge NSString *)kCVPixelBufferIOSurfaceOpenGLTextureCompatibilityKey: @YES,
+					},
+				};
+				
+				NSDictionary *poolAttributes = @{
+					(__bridge NSString *)kCVPixelBufferPoolMinimumBufferCountKey: @(4),
+				};
+				
+				CVReturn status = CVPixelBufferPoolCreate(NULL, (__bridge CFDictionaryRef)poolAttributes, (__bridge CFDictionaryRef)pixelBufferAttributes, &pixelBufferPool);
+				if(status != kCVReturnSuccess)
+				{
+					return;
+				}
+				
+				self.capturePixelBufferPool = pixelBufferPool;
+				CFRelease(pixelBufferPool);
+			}
 			
 			CVPixelBufferRef pixelBuffer = NULL;
-			const CVReturn pixelBufferStatus = CVPixelBufferCreateWithBytes(NULL, width, height, pixelFormat, baseAddress, bytesPerRow, videoFrameReleaseCallback, videoFrame, (__bridge CFDictionaryRef)pixelBufferAttributes, &pixelBuffer);
-			if (pixelBufferStatus != kCVReturnSuccess)
+			const CVReturn pixelBufferStatus = CVPixelBufferPoolCreatePixelBuffer(NULL, pixelBufferPool, &pixelBuffer);
+			if(pixelBufferStatus != kCVReturnSuccess)
 			{
 				return;
 			}
-
-			videoFrame->AddRef(); // videoFrame will be released by videoFrameReleaseCallback
-
+			
+			CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+			
+			void *outputBuffer = CVPixelBufferGetBaseAddress(pixelBuffer);
+			memcpy(outputBuffer, inputBuffer, rowBytes * height); // We are copying the whole frame each iteration, there must be a better way. CPU => CPU => GPU
+			
+			CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+			
 			CMVideoFormatDescriptionRef formatDescription = NULL;
 			CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &formatDescription);
 			
-			CMSampleTimingInfo timingInfo = {
-				CMTimeMake(frameDuration, (CMTimeScale)frameScale),
-				CMTimeMake(frameTime, (CMTimeScale)frameScale),
-				kCMTimeInvalid
-			};
+			CMSampleTimingInfo timingInfo = { CMTimeMake(frameDuration, (CMTimeScale)frameScale), CMTimeMake(frameTime, (CMTimeScale)frameScale), kCMTimeInvalid };
 			
 			CMSampleBufferRef sampleBuffer = NULL;
 			OSStatus status = CMSampleBufferCreateForImageBuffer(NULL, pixelBuffer, YES, NULL, NULL, formatDescription, &timingInfo, &sampleBuffer);
@@ -547,6 +573,8 @@ void videoFrameReleaseCallback(void *releaseRefCon, const void *baseAddress)
 			
 			CVPixelBufferRelease(pixelBuffer);
 			CFRelease(formatDescription);
+			
+			videoFrame->Release();
 		}
 		else
 		{
@@ -610,6 +638,8 @@ void videoFrameReleaseCallback(void *releaseRefCon, const void *baseAddress)
 			}
 			
 			CFRelease(dataBuffer);
+			
+			audioPacket->Release();
 		}
 	});
 }
@@ -617,6 +647,8 @@ void videoFrameReleaseCallback(void *releaseRefCon, const void *baseAddress)
 - (void)didChangeVideoFormat:(BMDVideoInputFormatChangedEvents)changes displayMode:(IDeckLinkDisplayMode *)displayMode flags:(BMDDetectedVideoInputFormatFlags)flags
 {
 	CaptureQueue_dispatch_sync(self.captureQueue, ^{
+		self.capturePixelBufferPool = nil;
+		
 		BMDDisplayMode displayModeValue = displayMode->GetDisplayMode();
 		BMDDisplayMode pixelFormat = 0;
 		if (flags & bmdDetectedVideoInputYCbCr422)
