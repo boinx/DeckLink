@@ -467,6 +467,56 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	}
 	
 	CaptureQueue_dispatch_sync(self.captureQueue, ^{
+		if(audioPacket != NULL)
+		{
+			long frameCount = audioPacket->GetSampleFrameCount();
+			
+			CMAudioFormatDescriptionRef formatDescription = self.captureActiveAudioFormatDescription;
+			
+			const AudioStreamBasicDescription *basicStreamDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription);
+			
+			BMDTimeValue packetTime = 0;
+			audioPacket->GetPacketTime(&packetTime, basicStreamDescription->mSampleRate);
+			
+			CMSampleTimingInfo timingInfo = { CMTimeMake(1, basicStreamDescription->mSampleRate), CMTimeMake(packetTime, basicStreamDescription->mSampleRate), kCMTimeInvalid };
+			const size_t frameSize = basicStreamDescription->mBytesPerFrame;
+			
+			void *inputBuffer = NULL;
+			audioPacket->GetBytes(&inputBuffer);
+			
+			void *outputBuffer = malloc(frameCount * frameSize);
+			memcpy(outputBuffer, inputBuffer, frameCount * frameSize);
+			
+			CMBlockBufferRef dataBuffer = NULL;
+			CMBlockBufferCreateWithMemoryBlock(NULL, outputBuffer, frameCount * basicStreamDescription->mBytesPerFrame, NULL, NULL, 0, frameCount * frameSize, kCMBlockBufferAssureMemoryNowFlag, &dataBuffer);
+			
+			CMSampleBufferRef sampleBuffer = NULL;
+			OSStatus status = CMSampleBufferCreate(NULL, dataBuffer, YES, NULL, NULL, formatDescription, frameCount, 1, &timingInfo, 1, &frameSize, &sampleBuffer);
+			if(status == noErr)
+			{
+				id<DeckLinkDeviceCaptureAudioDelegate> delegate = self.captureAudioDelegate;
+				dispatch_queue_t queue = self.captureAudioDelegateQueue;
+				if(delegate != nil && queue != nil)
+				{
+					dispatch_async(queue, ^{
+						if([delegate respondsToSelector:@selector(DeckLinkDevice:didCaptureAudioSampleBuffer:)])
+						{
+							[delegate DeckLinkDevice:self didCaptureAudioSampleBuffer:sampleBuffer];
+						}
+						CFRelease(sampleBuffer);
+					});
+				}
+				else
+				{
+					CFRelease(sampleBuffer);
+				}
+			}
+			
+			CFRelease(dataBuffer);
+			
+			audioPacket->Release();
+		}
+		
 		if(videoFrame != NULL)
 		{
 			CMVideoFormatDescriptionRef videoFormatDescription = self.captureActiveVideoFormatDescription;
@@ -590,56 +640,6 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 					}
 				});
 			}
-		}
-		
-		if(audioPacket != NULL)
-		{
-			long frameCount = audioPacket->GetSampleFrameCount();
-			
-			CMAudioFormatDescriptionRef formatDescription = self.captureActiveAudioFormatDescription;
-			
-			const AudioStreamBasicDescription *basicStreamDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription);
-			
-			BMDTimeValue packetTime = 0;
-			audioPacket->GetPacketTime(&packetTime, basicStreamDescription->mSampleRate);
-			
-			CMSampleTimingInfo timingInfo = { CMTimeMake(1, basicStreamDescription->mSampleRate), CMTimeMake(packetTime, basicStreamDescription->mSampleRate), kCMTimeInvalid };
-			const size_t frameSize = basicStreamDescription->mBytesPerFrame;
-			
-			void *inputBuffer = NULL;
-			audioPacket->GetBytes(&inputBuffer);
-			
-			void *outputBuffer = malloc(frameCount * frameSize);
-			memcpy(outputBuffer, inputBuffer, frameCount * frameSize);
-			
-			CMBlockBufferRef dataBuffer = NULL;
-			CMBlockBufferCreateWithMemoryBlock(NULL, outputBuffer, frameCount * basicStreamDescription->mBytesPerFrame, NULL, NULL, 0, frameCount * frameSize, kCMBlockBufferAssureMemoryNowFlag, &dataBuffer);
-			
-			CMSampleBufferRef sampleBuffer = NULL;
-			OSStatus status = CMSampleBufferCreate(NULL, dataBuffer, YES, NULL, NULL, formatDescription, frameCount, 1, &timingInfo, 1, &frameSize, &sampleBuffer);
-			if(status == noErr)
-			{
-				id<DeckLinkDeviceCaptureAudioDelegate> delegate = self.captureAudioDelegate;
-				dispatch_queue_t queue = self.captureAudioDelegateQueue;
-				if(delegate != nil && queue != nil)
-				{
-					dispatch_async(queue, ^{
-						if([delegate respondsToSelector:@selector(DeckLinkDevice:didCaptureAudioSampleBuffer:)])
-						{
-							[delegate DeckLinkDevice:self didCaptureAudioSampleBuffer:sampleBuffer];
-						}
-						CFRelease(sampleBuffer);
-					});
-				}
-				else
-				{
-					CFRelease(sampleBuffer);
-				}
-			}
-			
-			CFRelease(dataBuffer);
-			
-			audioPacket->Release();
 		}
 	});
 }
