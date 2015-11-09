@@ -88,6 +88,8 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	{
 		NSMutableArray *formatDescriptions = [NSMutableArray arrayWithCapacity:2];
 		
+        // TODO: Set up ASBD with actually available input channels via BMDDeckLinkMaximumAudioChannels and BMDDeckLinkMaximumAnalogAudioChannels
+        
 		// bmdAudioSampleRate48kHz / bmdAudioSampleType16bitInteger
 		{
 			const AudioStreamBasicDescription streamBasicDescription = { 48000.0, kAudioFormatLinearPCM, kAudioFormatFlagIsSignedInteger, 4, 1, 4, 2, 16, 0 };
