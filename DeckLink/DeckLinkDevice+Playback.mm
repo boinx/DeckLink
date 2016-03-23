@@ -280,7 +280,7 @@
 				status = deckLinkKeyer->Enable(true);
 			}
 			
-			if (status != S_OK)
+			if (status != S_OK && status != E_NOTIMPL)
 			{
 				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
 				return;
