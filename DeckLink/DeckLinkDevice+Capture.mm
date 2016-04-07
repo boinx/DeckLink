@@ -487,34 +487,42 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 			audioPacket->GetBytes(&inputBuffer);
 			
 			void *outputBuffer = malloc(frameCount * frameSize);
-			memcpy(outputBuffer, inputBuffer, frameCount * frameSize);
-			
-			CMBlockBufferRef dataBuffer = NULL;
-			CMBlockBufferCreateWithMemoryBlock(NULL, outputBuffer, frameCount * basicStreamDescription->mBytesPerFrame, NULL, NULL, 0, frameCount * frameSize, kCMBlockBufferAssureMemoryNowFlag, &dataBuffer);
-			
-			CMSampleBufferRef sampleBuffer = NULL;
-			OSStatus status = CMSampleBufferCreate(NULL, dataBuffer, YES, NULL, NULL, formatDescription, frameCount, 1, &timingInfo, 1, &frameSize, &sampleBuffer);
-			if(status == noErr)
-			{
-				id<DeckLinkDeviceCaptureAudioDelegate> delegate = self.captureAudioDelegate;
-				dispatch_queue_t queue = self.captureAudioDelegateQueue;
-				if(delegate != nil && queue != nil)
-				{
-					dispatch_async(queue, ^{
-						if([delegate respondsToSelector:@selector(DeckLinkDevice:didCaptureAudioSampleBuffer:)])
-						{
-							[delegate DeckLinkDevice:self didCaptureAudioSampleBuffer:sampleBuffer];
-						}
-						CFRelease(sampleBuffer);
-					});
-				}
-				else
-				{
-					CFRelease(sampleBuffer);
-				}
-			}
-			
-			CFRelease(dataBuffer);
+            
+            if (outputBuffer && inputBuffer && frameCount && frameSize)
+            {
+                memcpy(outputBuffer, inputBuffer, frameCount * frameSize);
+                
+                CMBlockBufferRef dataBuffer = NULL;
+                CMBlockBufferCreateWithMemoryBlock(NULL, outputBuffer, frameCount * basicStreamDescription->mBytesPerFrame, NULL, NULL, 0, frameCount * frameSize, kCMBlockBufferAssureMemoryNowFlag, &dataBuffer);
+                
+                CMSampleBufferRef sampleBuffer = NULL;
+                OSStatus status = CMSampleBufferCreate(NULL, dataBuffer, YES, NULL, NULL, formatDescription, frameCount, 1, &timingInfo, 1, &frameSize, &sampleBuffer);
+                if(status == noErr)
+                {
+                    id<DeckLinkDeviceCaptureAudioDelegate> delegate = self.captureAudioDelegate;
+                    dispatch_queue_t queue = self.captureAudioDelegateQueue;
+                    if(delegate != nil && queue != nil)
+                    {
+                        dispatch_async(queue, ^{
+                            if([delegate respondsToSelector:@selector(DeckLinkDevice:didCaptureAudioSampleBuffer:)])
+                            {
+                                [delegate DeckLinkDevice:self didCaptureAudioSampleBuffer:sampleBuffer];
+                            }
+                            CFRelease(sampleBuffer);
+                        });
+                    }
+                    else
+                    {
+                        CFRelease(sampleBuffer);
+                    }
+                }
+                
+                CFRelease(dataBuffer);
+            }
+            else
+            {
+                NSLog(@"ERROR: could not copy audio buffer, output %p input %p count %ld size %zu. %s:%d", outputBuffer, inputBuffer, frameCount, frameSize, __FUNCTION__, __LINE__);
+            }
 			
 			audioPacket->Release();
 		}
