@@ -468,7 +468,7 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 		audioPacket->AddRef();
 	}
 	
-	CaptureQueue_dispatch_sync(self.captureQueue, ^{
+	dispatch_async(self.captureQueue, ^{
 		if(audioPacket != NULL)
 		{
 			long frameCount = audioPacket->GetSampleFrameCount();
