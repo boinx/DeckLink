@@ -471,7 +471,10 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	dispatch_async(self.captureQueue, ^{
 		if(audioPacket != NULL)
 		{
-			long frameCount = audioPacket->GetSampleFrameCount();
+            // Work around a bug that causes the sample count to be provided in an
+            // unsigned representation of the signed negative value of the number of audio samples
+            int32_t sampleCount = (int32_t)audioPacket->GetSampleFrameCount();
+            sampleCount = abs(sampleCount);
 			
 			CMAudioFormatDescriptionRef formatDescription = self.captureActiveAudioFormatDescription;
 			
@@ -486,17 +489,17 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 			void *inputBuffer = NULL;
 			audioPacket->GetBytes(&inputBuffer);
 			
-			void *outputBuffer = malloc(frameCount * frameSize);
+			void *outputBuffer = malloc(sampleCount * frameSize);
             
-            if (outputBuffer && inputBuffer && frameCount && frameSize)
+            if (outputBuffer && inputBuffer && sampleCount && frameSize)
             {
-                memcpy(outputBuffer, inputBuffer, frameCount * frameSize);
+                memcpy(outputBuffer, inputBuffer, sampleCount * frameSize);
                 
                 CMBlockBufferRef dataBuffer = NULL;
-                CMBlockBufferCreateWithMemoryBlock(NULL, outputBuffer, frameCount * basicStreamDescription->mBytesPerFrame, NULL, NULL, 0, frameCount * frameSize, kCMBlockBufferAssureMemoryNowFlag, &dataBuffer);
+                CMBlockBufferCreateWithMemoryBlock(NULL, outputBuffer, sampleCount * basicStreamDescription->mBytesPerFrame, NULL, NULL, 0, sampleCount * frameSize, kCMBlockBufferAssureMemoryNowFlag, &dataBuffer);
                 
                 CMSampleBufferRef sampleBuffer = NULL;
-                OSStatus status = CMSampleBufferCreate(NULL, dataBuffer, YES, NULL, NULL, formatDescription, frameCount, 1, &timingInfo, 1, &frameSize, &sampleBuffer);
+                OSStatus status = CMSampleBufferCreate(NULL, dataBuffer, YES, NULL, NULL, formatDescription, sampleCount, 1, &timingInfo, 1, &frameSize, &sampleBuffer);
                 if(status == noErr)
                 {
                     id<DeckLinkDeviceCaptureAudioDelegate> delegate = self.captureAudioDelegate;
@@ -521,7 +524,7 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
             }
             else
             {
-                NSLog(@"ERROR: could not copy audio buffer, output %p input %p count %ld size %zu. %s:%d", outputBuffer, inputBuffer, frameCount, frameSize, __FUNCTION__, __LINE__);
+                NSLog(@"ERROR: could not copy audio buffer, output %p input %p count %ld size %zu. %s:%d", outputBuffer, inputBuffer, sampleCount, frameSize, __FUNCTION__, __LINE__);
             }
 			
 			audioPacket->Release();
