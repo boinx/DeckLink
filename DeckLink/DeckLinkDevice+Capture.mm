@@ -165,35 +165,20 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 				return;
 			}
 			
-			NSNumber *displayModeValue = (__bridge NSNumber *)CMFormatDescriptionGetExtension(formatDescription, DeckLinkFormatDescriptionDisplayModeKey);
-			if (![displayModeValue isKindOfClass:NSNumber.class])
-			{
-				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:kCMFormatDescriptionError_ValueNotAvailable userInfo:nil];
-				return;
-			}
-			
-			BMDDisplayMode displayMode = displayModeValue.intValue;
-			
-			BMDPixelFormat pixelFormat = CMVideoFormatDescriptionGetCodecType(formatDescription);
-			
-			bool supportsInputFormatDetection = false;
-			deckLinkAttributes->GetFlag(BMDDeckLinkSupportsInputFormatDetection, &supportsInputFormatDetection);
-			
-			BMDVideoInputFlags flags = bmdVideoInputFlagDefault;
-			if (supportsInputFormatDetection)
-			{
-				flags |= bmdVideoInputEnableFormatDetection;
-			}
-			
-			deckLinkInput->PauseStreams();
-			HRESULT status = deckLinkInput->EnableVideoInput(displayMode, pixelFormat, flags);
-			if (status != S_OK)
-			{
-				deckLinkInput->PauseStreams();
-				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-				return;
-			}
-			deckLinkInput->PauseStreams();
+			HRESULT status = deckLinkInput->PauseStreams();
+            if (status == S_OK)
+            {
+                // Only enable input if we are already streaming
+                
+                status = [self enableVideoInputWithVideoFormatDescription:formatDescription];
+                if (status != S_OK)
+                {
+                    deckLinkInput->PauseStreams();
+                    error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+                    return;
+                }
+                deckLinkInput->PauseStreams();
+            }
 		}
 		else
 		{
@@ -242,21 +227,20 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 				return;
 			}
 			
-			const AudioStreamBasicDescription *basicStreamDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription);
-			
-			const BMDAudioSampleRate sampleRate = basicStreamDescription->mSampleRate;;
-			const BMDAudioSampleType sampleType = basicStreamDescription->mBitsPerChannel;
-			const uint32_t channels = basicStreamDescription->mChannelsPerFrame;
-			
-			deckLinkInput->PauseStreams();
-			HRESULT status = deckLinkInput->EnableAudioInput(sampleRate, sampleType, channels);
-			if (status != S_OK)
-			{
-				deckLinkInput->PauseStreams();
-				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-				return;
-			}
-			deckLinkInput->PauseStreams();
+            HRESULT status = deckLinkInput->PauseStreams();
+            if (status == S_OK)
+            {
+                // Only enable input if we are already streaming
+                
+                HRESULT status = [self enableAudioInputWithAudioFormatDescription:formatDescription];
+                if (status != S_OK)
+                {
+                    deckLinkInput->PauseStreams();
+                    error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+                    return;
+                }
+                deckLinkInput->PauseStreams();
+            }
 		}
 		else
 		{
@@ -402,6 +386,44 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	});
 }
 
+- (HRESULT)enableVideoInputWithVideoFormatDescription:(CMAudioFormatDescriptionRef)formatDescription
+{
+    NSNumber *displayModeValue = (__bridge NSNumber *)CMFormatDescriptionGetExtension(formatDescription, DeckLinkFormatDescriptionDisplayModeKey);
+    if (![displayModeValue isKindOfClass:NSNumber.class])
+    {
+        return (HRESULT)kCMFormatDescriptionError_ValueNotAvailable;
+    }
+    BMDDisplayMode displayMode = displayModeValue.intValue;
+    
+    BMDPixelFormat pixelFormat = CMVideoFormatDescriptionGetCodecType(formatDescription);
+    
+    bool supportsInputFormatDetection = false;
+    deckLinkAttributes->GetFlag(BMDDeckLinkSupportsInputFormatDetection, &supportsInputFormatDetection);
+    
+    BMDVideoInputFlags flags = bmdVideoInputFlagDefault;
+    if (supportsInputFormatDetection)
+    {
+        flags |= bmdVideoInputEnableFormatDetection;
+    }
+    
+    HRESULT status = deckLinkInput->EnableVideoInput(displayMode, pixelFormat, flags);
+
+    return status;
+}
+
+- (HRESULT)enableAudioInputWithAudioFormatDescription:(CMAudioFormatDescriptionRef)formatDescription
+{
+    const AudioStreamBasicDescription *basicStreamDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription);
+    
+    const BMDAudioSampleRate sampleRate = basicStreamDescription->mSampleRate;;
+    const BMDAudioSampleType sampleType = basicStreamDescription->mBitsPerChannel;
+    const uint32_t channels = basicStreamDescription->mChannelsPerFrame;
+    
+    HRESULT status = deckLinkInput->EnableAudioInput(sampleRate, sampleType, channels);
+    
+    return status;
+}
+
 - (BOOL)startCaptureWithError:(NSError **)outError
 {
 	__block BOOL result = NO;
@@ -412,8 +434,22 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 			result = YES;
 			return;
 		}
+        
+        HRESULT status = [self enableVideoInputWithVideoFormatDescription:self.captureActiveVideoFormatDescription];
+        if (status != S_OK)
+        {
+            error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+            return;
+        }
+        
+        status = [self enableAudioInputWithAudioFormatDescription:self.captureActiveAudioFormatDescription];
+        if (status != S_OK)
+        {
+            error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+            return;
+        }
 
-		HRESULT status = deckLinkInput->StartStreams();
+		status = deckLinkInput->StartStreams();
 		if (status != S_OK)
 		{
 			error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
@@ -448,6 +484,8 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 		}
 		
 		deckLinkInput->StopStreams();
+        deckLinkInput->DisableVideoInput();
+        deckLinkInput->DisableAudioInput();
 		
 		self.captureActive = NO;
 		self.captureInputSourceConnected = NO;
@@ -524,7 +562,12 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
             }
             else
             {
-                NSLog(@"ERROR: could not copy audio buffer, output %p input %p count %ld size %zu. %s:%d", outputBuffer, inputBuffer, sampleCount, frameSize, __FUNCTION__, __LINE__);
+                NSLog(@"ERROR: could not copy audio buffer, output %p input %p count %d size %zu. %s:%d", outputBuffer, inputBuffer, sampleCount, frameSize, __FUNCTION__, __LINE__);
+                
+                if (outputBuffer)
+                {
+                    free(outputBuffer);
+                }
             }
 			
 			audioPacket->Release();
