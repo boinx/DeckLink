@@ -429,40 +429,55 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	__block BOOL result = NO;
 	__block NSError *error = nil;
 	CaptureQueue_dispatch_sync(self.captureQueue, ^{
-		if (self.captureActive)
-		{
-			result = YES;
-			return;
-		}
         
-        HRESULT status = [self enableVideoInputWithVideoFormatDescription:self.captureActiveVideoFormatDescription];
-        if (status != S_OK)
+        deckLinkInput->StopStreams();
+        
+        self.captureInputSourceConnected = NO;
+        self.captureActive = NO;
+        
+        if (self.captureActiveVideoFormatDescription)
         {
-            error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-            return;
+            HRESULT status = [self enableVideoInputWithVideoFormatDescription:self.captureActiveVideoFormatDescription];
+            if (status != S_OK)
+            {
+                error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+                return;
+            }
+            
+            result = YES;
         }
         
-        status = [self enableAudioInputWithAudioFormatDescription:self.captureActiveAudioFormatDescription];
-        if (status != S_OK)
+        if (self.captureActiveAudioFormatDescription)
         {
-            error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-            return;
+            HRESULT status = [self enableAudioInputWithAudioFormatDescription:self.captureActiveAudioFormatDescription];
+            if (status != S_OK)
+            {
+                error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+                return;
+            }
+            
+            result = YES;
         }
-
-		status = deckLinkInput->StartStreams();
-		if (status != S_OK)
-		{
-			error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-			return;
-		}
-
-		self.captureInputSourceConnected = YES; // We assume an input source is connected when start capturing
-		self.captureActive = YES;
-		result = YES;
+        
+        if (result)
+        {
+            HRESULT status = deckLinkInput->StartStreams();
+            if (status != S_OK)
+            {
+                error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+                return;
+            }
+            
+            self.captureInputSourceConnected = YES; // We assume an input source is connected when start capturing
+            self.captureActive = YES;
+        }
+		
 	});
 	
 	if (error != nil)
 	{
+        result = NO;
+        
 		if (outError != NULL)
 		{
 			*outError = error;
