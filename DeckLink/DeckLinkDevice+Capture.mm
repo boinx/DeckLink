@@ -233,26 +233,31 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
                 // Only enable input if we are already streaming
                 
                 HRESULT status = [self enableAudioInputWithAudioFormatDescription:formatDescription];
-                if (status != S_OK)
+				deckLinkInput->PauseStreams();
+
+				if (status != S_OK)
                 {
-                    deckLinkInput->PauseStreams();
+					// something went wrong setting the audio format
                     error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
                     return;
                 }
-                deckLinkInput->PauseStreams();
             }
 		}
 		else
 		{
-			deckLinkInput->PauseStreams();
-			HRESULT status = deckLinkInput->DisableAudioInput();
-			if (status != S_OK)
+			HRESULT status = deckLinkInput->PauseStreams();
+			if (status == S_OK)
 			{
+				status = deckLinkInput->DisableAudioInput();
 				deckLinkInput->PauseStreams();
-				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-				return;
+
+				if (status != S_OK)
+				{
+					// something went wrong when disabling audio
+					error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+					return;
+				}
 			}
-			deckLinkInput->PauseStreams();
 		}
 		
 		self.captureActiveAudioFormatDescription = formatDescription;
