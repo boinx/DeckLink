@@ -393,6 +393,11 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 
 - (HRESULT)enableVideoInputWithVideoFormatDescription:(CMAudioFormatDescriptionRef)formatDescription
 {
+	if(formatDescription == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	
     NSNumber *displayModeValue = (__bridge NSNumber *)CMFormatDescriptionGetExtension(formatDescription, DeckLinkFormatDescriptionDisplayModeKey);
     if (![displayModeValue isKindOfClass:NSNumber.class])
     {
@@ -418,6 +423,11 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 
 - (HRESULT)enableAudioInputWithAudioFormatDescription:(CMAudioFormatDescriptionRef)formatDescription
 {
+	if(formatDescription == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	
     const AudioStreamBasicDescription *basicStreamDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription);
     
     const BMDAudioSampleRate sampleRate = basicStreamDescription->mSampleRate;;
