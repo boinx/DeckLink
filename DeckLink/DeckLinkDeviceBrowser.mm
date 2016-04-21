@@ -1,7 +1,7 @@
 #import "DeckLinkDeviceBrowser.h"
 
 #import "DeckLinkAPI.h"
-#import "DeckLinkDevice.h"
+#import "DeckLinkDevice+Internal.h"
 #import "DeckLinkDeviceBrowserInternalCallback.h"
 
 
@@ -191,6 +191,7 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 	
 	dispatch_sync(self.devicesQueue, ^{
 		[self.devices addObject:device];
+        [self uniquifyDisplayNameOfDevice:device inSet:self.devices];
 	});
 		
 	dispatch_async(dispatch_get_main_queue(), ^{
@@ -248,6 +249,33 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 			[delegate DeckLinkDeviceBrowser:self didRemoveDevice:removedDevice];
 		}
 	});
+}
+
+- (void)uniquifyDisplayNameOfDevice:(DeckLinkDevice *)deckLinkDevice inSet:(NSSet *)devices
+{
+    NSString *displayName = deckLinkDevice.displayName;
+    NSString *modelName = deckLinkDevice.modelName;
+    
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"displayName BEGINSWITH %@ AND modelName == %@", displayName, modelName];
+    NSSet *devicesWithNonUniqueDisplayNames = [devices filteredSetUsingPredicate:predicate];
+    
+    if (devicesWithNonUniqueDisplayNames.count > 1) // the passed in device is assumed to be part of the set
+    {
+        NSArray *sortDescriptors = @[[NSSortDescriptor sortDescriptorWithKey:@"persistantID" ascending:YES],
+                                     [NSSortDescriptor sortDescriptorWithKey:@"topologicalID" ascending:YES]];
+                                    // DeckLink devices that do not provide any of these IDs will remain in random order
+        
+        NSArray *devicesWithNonUniqueDisplayNamesSorted = [devicesWithNonUniqueDisplayNames sortedArrayUsingDescriptors:sortDescriptors];
+        
+        NSInteger counter = 0;
+        for (DeckLinkDevice *sortedDevice in devicesWithNonUniqueDisplayNamesSorted)
+        {
+            NSString *uniquifiedDisplayName = [displayName stringByAppendingFormat:@" %ld", counter];
+            sortedDevice.displayName = uniquifiedDisplayName;
+            
+            counter++;
+        }
+    }
 }
 
 @end
