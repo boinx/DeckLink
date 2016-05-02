@@ -191,6 +191,7 @@
 				5061E9451B164177003552DE /* Products */,
 			);
 			sourceTree = "<group>";
+			usesTabs = 1;
 		};
 		5061E9451B164177003552DE /* Products */ = {
 			isa = PBXGroup;

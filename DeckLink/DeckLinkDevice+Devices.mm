@@ -51,7 +51,22 @@
 		}
 		
 		DeckLinkDevice *device = [[DeckLinkDevice alloc] initWithDeckLink:deckLink];
-		[devices addObject:device];
+		if(device){
+			[devices addObject:device];
+		}
+		else
+		{
+			CFStringRef displayName = NULL;
+			if (deckLink->GetDisplayName(&displayName) == S_OK)
+			{
+				NSLog(@"%s:%d can't create DeckLinkDevice instance from %@", __FUNCTION__, __LINE__, displayName);
+				CFRelease(displayName);
+			}
+			else
+			{
+				NSLog(@"%s:%d can't create DeckLinkDevice instance from unnamed Deck Link device.", __FUNCTION__, __LINE__);
+			}
+		}
 	}
 	
 	iterator->Release();
