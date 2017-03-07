@@ -74,6 +74,7 @@
 		951DBDE81CB6B3E000CC32A7 /* DeckLinkAPIStreaming.h in Headers */ = {isa = PBXBuildFile; fileRef = 951DBDCF1CB6B3E000CC32A7 /* DeckLinkAPIStreaming.h */; };
 		951DBDE91CB6B3E000CC32A7 /* DeckLinkAPITypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 951DBDD01CB6B3E000CC32A7 /* DeckLinkAPITypes.h */; };
 		951DBDEA1CB6B3E000CC32A7 /* DeckLinkAPIVersion.h in Headers */ = {isa = PBXBuildFile; fileRef = 951DBDD11CB6B3E000CC32A7 /* DeckLinkAPIVersion.h */; };
+		984EEC921E6EC8CE00DEDB73 /* DeckLinkAPI_v10_6.h in Headers */ = {isa = PBXBuildFile; fileRef = 984EEC911E6EC8CE00DEDB73 /* DeckLinkAPI_v10_6.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -159,6 +160,7 @@
 		951DBDCF1CB6B3E000CC32A7 /* DeckLinkAPIStreaming.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeckLinkAPIStreaming.h; sourceTree = "<group>"; };
 		951DBDD01CB6B3E000CC32A7 /* DeckLinkAPITypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeckLinkAPITypes.h; sourceTree = "<group>"; };
 		951DBDD11CB6B3E000CC32A7 /* DeckLinkAPIVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeckLinkAPIVersion.h; sourceTree = "<group>"; };
+		984EEC911E6EC8CE00DEDB73 /* DeckLinkAPI_v10_6.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DeckLinkAPI_v10_6.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -253,6 +255,7 @@
 				951DBDC11CB6B3E000CC32A7 /* DeckLinkAPI_v10_2.h */,
 				951DBDC21CB6B3E000CC32A7 /* DeckLinkAPI_v10_4.h */,
 				951DBDC31CB6B3E000CC32A7 /* DeckLinkAPI_v10_5.h */,
+				984EEC911E6EC8CE00DEDB73 /* DeckLinkAPI_v10_6.h */,
 				951DBDC41CB6B3E000CC32A7 /* DeckLinkAPI.h */,
 				951DBDC51CB6B3E000CC32A7 /* DeckLinkAPIConfiguration_v10_2.h */,
 				951DBDC61CB6B3E000CC32A7 /* DeckLinkAPIConfiguration_v10_4.h */,
@@ -405,6 +408,7 @@
 				951DBDD91CB6B3E000CC32A7 /* DeckLinkAPI_v9_9.h in Headers */,
 				5061E94A1B164177003552DE /* DeckLink.h in Headers */,
 				951DBDE21CB6B3E000CC32A7 /* DeckLinkAPIDeckControl.h in Headers */,
+				984EEC921E6EC8CE00DEDB73 /* DeckLinkAPI_v10_6.h in Headers */,
 				951DBDEA1CB6B3E000CC32A7 /* DeckLinkAPIVersion.h in Headers */,
 				951DBDE71CB6B3E000CC32A7 /* DeckLinkAPIModes.h in Headers */,
 				5061EB291B16E946003552DE /* DeckLinkDevice+Capture.h in Headers */,
