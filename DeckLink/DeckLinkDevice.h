@@ -9,4 +9,6 @@
 @property (nonatomic, assign, readonly) int32_t persistantID;
 @property (nonatomic, assign, readonly) int32_t topologicalID;
 
+@property (atomic, assign, readonly) NSUInteger frameBufferCount;
+
 @end

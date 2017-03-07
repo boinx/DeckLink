@@ -22,6 +22,8 @@
 	
 	self.playbackQueue = dispatch_queue_create("DeckLinkDevice.playbackQueue", DISPATCH_QUEUE_SERIAL);
 	
+	self.frameBufferCount = 0;
+	
 	// Video
 	IDeckLinkDisplayModeIterator *displayModeIterator = NULL;
 	if (deckLinkOutput->GetDisplayModeIterator(&displayModeIterator) == S_OK)
@@ -319,6 +321,8 @@
 
 - (void)playbackPixelBuffer:(CVPixelBufferRef)pixelBuffer
 {
+	self.frameBufferCount++;
+
 	CFRetain(pixelBuffer);
 	dispatch_async(self.playbackQueue, ^{
 		DeckLinkPixelBufferFrame *frame = new DeckLinkPixelBufferFrame(pixelBuffer);
@@ -326,6 +330,9 @@
 		frame->Release();
 		
 		CFRelease(pixelBuffer);
+
+		self.frameBufferCount--;
+
 	});
 }
 

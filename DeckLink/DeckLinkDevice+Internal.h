@@ -75,4 +75,6 @@
 @property (atomic, copy) NSString *playbackActiveKeyingMode;
 @property (atomic, assign) float playbackKeyingAlpha;
 
+@property (atomic, assign) NSUInteger frameBufferCount;
+
 @end
