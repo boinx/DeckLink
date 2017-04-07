@@ -336,15 +336,20 @@
 	});
 }
 
-- (void)playbackContiniousAudioBufferList:(const AudioBufferList *)audioBufferList numberOfSamples:(UInt32)numberOfSamples
+- (void)playbackContinuousAudioBufferList:(AudioBufferList *)audioBufferList numberOfSamples:(UInt32)numberOfSamples completionHandler:(void(^)())completionHandler
 {
-	dispatch_sync(self.playbackQueue, ^{
+	dispatch_async(self.playbackQueue, ^{
 		uint32_t outNumberOfSamples = 0;
 		deckLinkOutput->WriteAudioSamplesSync(audioBufferList->mBuffers[0].mData, numberOfSamples, &outNumberOfSamples);
 		
 		if (numberOfSamples != outNumberOfSamples)
 		{
 			NSLog(@"%s:%d:Dropped Audio Samples: %u != %u", __FUNCTION__, __LINE__, numberOfSamples, outNumberOfSamples);
+		}
+		
+		if (completionHandler)
+		{
+			completionHandler();
 		}
 	});
 }

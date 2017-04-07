@@ -23,7 +23,7 @@
 
 - (void)playbackPixelBuffer:(CVPixelBufferRef)pixelBuffer;
 
-- (void)playbackContiniousAudioBufferList:(const AudioBufferList *)audioBufferList numberOfSamples:(UInt32)numberOfSamples;
+- (void)playbackContinuousAudioBufferList:(AudioBufferList *)audioBufferList numberOfSamples:(UInt32)numberOfSamples completionHandler:(void(^)())completionHandler;
 
 #if 0
 
