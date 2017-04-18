@@ -394,18 +394,19 @@ enum _BMDDeckLinkAttributeID {
     /* Integers */
 
     BMDDeckLinkMaximumAudioChannels                              = 'mach',
-    BMDDeckLinkMaximumAnalogAudioChannels                        = 'aach',
+    BMDDeckLinkMaximumAnalogAudioInputChannels                   = 'iach',
+    BMDDeckLinkMaximumAnalogAudioOutputChannels                  = 'aach',
     BMDDeckLinkNumberOfSubDevices                                = 'nsbd',
     BMDDeckLinkSubDeviceIndex                                    = 'subi',
     BMDDeckLinkPersistentID                                      = 'peid',
     BMDDeckLinkDeviceGroupID                                     = 'dgid',
     BMDDeckLinkTopologicalID                                     = 'toid',
-    BMDDeckLinkVideoOutputConnections                            = 'vocn',
-    BMDDeckLinkVideoInputConnections                             = 'vicn',
-    BMDDeckLinkAudioOutputConnections                            = 'aocn',
-    BMDDeckLinkAudioInputConnections                             = 'aicn',
+    BMDDeckLinkVideoOutputConnections                            = 'vocn',	// Returns a BMDVideoConnection bit field
+    BMDDeckLinkVideoInputConnections                             = 'vicn',	// Returns a BMDVideoConnection bit field
+    BMDDeckLinkAudioOutputConnections                            = 'aocn',	// Returns a BMDAudioConnection bit field
+    BMDDeckLinkAudioInputConnections                             = 'aicn',	// Returns a BMDAudioConnection bit field
     BMDDeckLinkVideoIOSupport                                    = 'vios',	// Returns a BMDVideoIOSupport bit field
-    BMDDeckLinkDeckControlConnections                            = 'dccn',
+    BMDDeckLinkDeckControlConnections                            = 'dccn',	// Returns a BMDDeckControlConnection bit field
     BMDDeckLinkDeviceInterface                                   = 'dbus',	// Returns a BMDDeviceInterface
     BMDDeckLinkAudioInputRCAChannelCount                         = 'airc',
     BMDDeckLinkAudioInputXLRChannelCount                         = 'aixc',
