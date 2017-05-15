@@ -64,6 +64,7 @@
 @property (atomic, assign) BOOL playbackActive;
 
 @property (nonatomic, strong) dispatch_queue_t playbackQueue;
+@property (nonatomic, strong) dispatch_queue_t frameDownloadQueue;
 
 @property (nonatomic, copy) NSArray *playbackVideoFormatDescriptions;
 @property (atomic, strong) __attribute__((NSObject)) CMVideoFormatDescriptionRef playbackActiveVideoFormatDescription;

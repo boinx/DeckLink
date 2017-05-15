@@ -21,6 +21,7 @@
 	self.playbackSupported = YES;
 	
 	self.playbackQueue = dispatch_queue_create("DeckLinkDevice.playbackQueue", DISPATCH_QUEUE_SERIAL);
+	self.frameDownloadQueue = dispatch_queue_create("DeckLinkDevice.frameDownloadQueue", DISPATCH_QUEUE_SERIAL);
 	
 	self.frameBufferCount = 0;
 	
@@ -324,14 +325,26 @@
 	self.frameBufferCount++;
 
 	CFRetain(pixelBuffer);
-	dispatch_async(self.playbackQueue, ^{
-		DeckLinkPixelBufferFrame *frame = new DeckLinkPixelBufferFrame(pixelBuffer);
-		deckLinkOutput->DisplayVideoFrameSync(frame);
-		frame->Release();
+	dispatch_async(self.frameDownloadQueue, ^{
+		// The first queue just downloads the frame from GPU to CPU RAM even if the playbackQueue is sending out data to the device.
 		
-		CFRelease(pixelBuffer);
+		DeckLinkPixelBufferFrame *frame = new DeckLinkPixelBufferFrame(pixelBuffer);
 
-		self.frameBufferCount--;
+		dispatch_async(self.playbackQueue, ^{
+			// the second queue is sending the image data to the device immediately but don't need to wait for next download
+			
+			deckLinkOutput->DisplayVideoFrameSync(frame);
+		
+			dispatch_async(self.playbackQueue, ^{
+
+				frame->Release();
+				
+				CFRelease(pixelBuffer);
+
+				self.frameBufferCount--;
+			});
+
+		});
 
 	});
 }
