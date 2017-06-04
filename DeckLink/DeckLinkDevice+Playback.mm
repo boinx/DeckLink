@@ -320,6 +320,58 @@
 	return result;
 }
 
+- (void)startScheduledPlaybackWithStartTime:(NSUInteger)startTime timeScale:(NSUInteger)timeScale
+{
+	dispatch_async(self.playbackQueue, ^{
+		self.frameBufferCount = 0;
+		deckLinkOutput->StartScheduledPlayback(startTime, timeScale, 1.0);
+		deckLinkOutputCallback = new DeckLinkDeviceInternalOutputCallback(self);
+		deckLinkOutput->SetScheduledFrameCompletionCallback(deckLinkOutputCallback);
+	});
+}
+
+- (void)schedulePlaybackOfPixelBuffer:(CVPixelBufferRef)pixelBuffer displayTime:(NSUInteger)displayTime frameDuration:(NSUInteger)frameDuration timeScale:(NSUInteger)timeScale
+{
+	self.frameBufferCount++;
+	
+	CFRetain(pixelBuffer);
+	dispatch_async(self.frameDownloadQueue, ^{
+		// The first queue just downloads the frame from GPU to CPU RAM even if the playbackQueue is sending out data to the device.
+		
+		DeckLinkPixelBufferFrame *frame = new DeckLinkPixelBufferFrame(pixelBuffer);
+		// IDeckLinkVideoConversion
+		
+		dispatch_async(self.playbackQueue, ^{
+			// the second queue is sending the image data to the device immediately but don't need to wait for next download
+			
+			// deckLinkOutput->DisplayVideoFrameSync(frame);
+			deckLinkOutput->ScheduleVideoFrame(frame, displayTime, frameDuration, timeScale);
+			CFRelease(pixelBuffer);
+
+		});
+		
+	});
+
+}
+
+- (void)scheduledFrameCompleted:(DeckLinkPixelBufferFrame *)frame result:(BMDOutputFrameCompletionResult)result
+{
+	frame->Release();
+	
+	self.frameBufferCount--;
+}
+
+- (void)stopScheduledPlaybackWithCompletionHandler:(DeckLinkDeviceStopPlaybackCompletionHandler)completionHandler
+{
+	dispatch_async(self.playbackQueue, ^{
+		deckLinkOutput->StopScheduledPlayback(0, NULL, 0);
+		
+		if(completionHandler){
+			completionHandler(YES, nil);
+		}
+	});
+}
+
 - (void)playbackPixelBuffer:(CVPixelBufferRef)pixelBuffer
 {
 	self.frameBufferCount++;
@@ -334,15 +386,12 @@
 			// the second queue is sending the image data to the device immediately but don't need to wait for next download
 			
 			deckLinkOutput->DisplayVideoFrameSync(frame);
-		
-			dispatch_async(self.playbackQueue, ^{
 
-				frame->Release();
-				
-				CFRelease(pixelBuffer);
+			frame->Release();
+			
+			CFRelease(pixelBuffer);
 
-				self.frameBufferCount--;
-			});
+			self.frameBufferCount--;
 
 		});
 
