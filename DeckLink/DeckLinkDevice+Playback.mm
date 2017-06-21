@@ -325,7 +325,7 @@
 	dispatch_async(self.playbackQueue, ^{
 		self.frameBufferCount = 0;
 		deckLinkOutput->StartScheduledPlayback(startTime, timeScale, 1.0);
-		deckLinkOutputCallback = new DeckLinkDeviceInternalOutputCallback(self);
+		deckLinkOutputCallback = new DeckLinkDeviceInternalOutputCallback((id<DeckLinkDeviceInternalOutputCallbackDelegate>)self);
 		deckLinkOutput->SetScheduledFrameCompletionCallback(deckLinkOutputCallback);
 	});
 }
