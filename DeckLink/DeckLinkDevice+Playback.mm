@@ -23,7 +23,7 @@
 	self.playbackQueue = dispatch_queue_create("DeckLinkDevice.playbackQueue", DISPATCH_QUEUE_SERIAL);
 	self.frameDownloadQueue = dispatch_queue_create("DeckLinkDevice.frameDownloadQueue", DISPATCH_QUEUE_SERIAL);
 	
-	self.frameBufferCount = 0;
+	atomic_store(&_sampleBufferCount_BackingStore, 0);
 	
 	// Video
 	IDeckLinkDisplayModeIterator *displayModeIterator = NULL;
@@ -323,7 +323,7 @@
 - (void)startScheduledPlaybackWithStartTime:(NSUInteger)startTime timeScale:(NSUInteger)timeScale
 {
 	dispatch_async(self.playbackQueue, ^{
-		self.frameBufferCount = 0;
+		atomic_store(&_sampleBufferCount_BackingStore, 0);
 		deckLinkOutput->StartScheduledPlayback(startTime, timeScale, 1.0);
 		deckLinkOutputCallback = new DeckLinkDeviceInternalOutputCallback((id<DeckLinkDeviceInternalOutputCallbackDelegate>)self);
 		deckLinkOutput->SetScheduledFrameCompletionCallback(deckLinkOutputCallback);
@@ -332,7 +332,7 @@
 
 - (void)schedulePlaybackOfPixelBuffer:(CVPixelBufferRef)pixelBuffer displayTime:(NSUInteger)displayTime frameDuration:(NSUInteger)frameDuration timeScale:(NSUInteger)timeScale
 {
-	self.frameBufferCount++;
+	atomic_fetch_add(&_sampleBufferCount_BackingStore, 1);
 	
 	CFRetain(pixelBuffer);
 	dispatch_async(self.frameDownloadQueue, ^{
@@ -358,7 +358,7 @@
 {
 	frame->Release();
 	
-	self.frameBufferCount--;
+	atomic_fetch_add(&_sampleBufferCount_BackingStore, -1);
 }
 
 - (void)stopScheduledPlaybackWithCompletionHandler:(DeckLinkDeviceStopPlaybackCompletionHandler)completionHandler
@@ -374,7 +374,7 @@
 
 - (void)playbackPixelBuffer:(CVPixelBufferRef)pixelBuffer
 {
-	self.frameBufferCount++;
+	atomic_fetch_add(&_sampleBufferCount_BackingStore, 1);
 
 	CFRetain(pixelBuffer);
 	dispatch_async(self.frameDownloadQueue, ^{
@@ -391,7 +391,7 @@
 			
 			CFRelease(pixelBuffer);
 
-			self.frameBufferCount--;
+			atomic_fetch_add(&_sampleBufferCount_BackingStore, -1);
 
 		});
 
@@ -414,6 +414,11 @@
 			completionHandler();
 		}
 	});
+}
+
+- (NSUInteger)frameBufferCount
+{
+	return _sampleBufferCount_BackingStore;
 }
 
 @end

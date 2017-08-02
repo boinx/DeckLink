@@ -1,3 +1,4 @@
+#import <stdatomic.h>
 #import "DeckLinkDevice.h"
 
 #import "DeckLinkAPI.h"
@@ -18,6 +19,8 @@
 	
 	DeckLinkDeviceInternalInputCallback *deckLinkInputCallback;
 	DeckLinkDeviceInternalOutputCallback *deckLinkOutputCallback;
+	
+	atomic_uint_fast64_t _sampleBufferCount_BackingStore;
 }
 
 - (instancetype)initWithDeckLink:(IDeckLink *)deckLink;
@@ -75,7 +78,5 @@
 @property (nonatomic, copy) NSArray *playbackKeyingModes;
 @property (atomic, copy) NSString *playbackActiveKeyingMode;
 @property (atomic, assign) float playbackKeyingAlpha;
-
-@property (atomic, assign) NSUInteger frameBufferCount;
 
 @end
