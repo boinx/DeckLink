@@ -19,6 +19,7 @@ public:
 	virtual long GetRowBytes(void);
 	virtual BMDPixelFormat GetPixelFormat(void);
 	virtual BMDFrameFlags GetFlags(void);
+	virtual void setFlags(BMDFrameFlags);
 	virtual HRESULT GetBytes(void **buffer);
 	
 	virtual HRESULT GetTimecode(BMDTimecodeFormat format, IDeckLinkTimecode **timecode);
@@ -33,4 +34,5 @@ private:
 	CVPixelBufferRef pixelBuffer;
 	bool locked;
 	int32_t refCount;
+	BMDFrameFlags frameFlags;
 };

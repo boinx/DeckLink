@@ -30,7 +30,8 @@
 	if (deckLinkOutput->GetDisplayModeIterator(&displayModeIterator) == S_OK)
 	{
 		BMDPixelFormat pixelFormats[] = {
-			bmdFormat8BitARGB, // == kCVPixelFormatType_32ARGB == 32
+		//	bmdFormat8BitARGB, // == kCVPixelFormatType_32ARGB == 32
+			bmdFormat8BitBGRA, // == kCVPixelFormatType_32BGRA 
 			bmdFormat8BitYUV, // == kCVPixelFormatType_422YpCbCr8 == '2vuy'
 		};
 		
@@ -372,7 +373,12 @@
 	});
 }
 
-- (void)playbackPixelBuffer:(CVPixelBufferRef)pixelBuffer
+- (void)playbackPixelBuffer:(CVPixelBufferRef)pixelBuffer {
+
+	[self playbackPixelBuffer:pixelBuffer isFlipped:NO];
+}
+
+- (void)playbackPixelBuffer:(CVPixelBufferRef)pixelBuffer isFlipped:(BOOL)flipped
 {
 	atomic_fetch_add(&_sampleBufferCount_BackingStore, 1);
 
@@ -382,6 +388,11 @@
 		
 		DeckLinkPixelBufferFrame *frame = new DeckLinkPixelBufferFrame(pixelBuffer);
 
+		if (flipped) {
+			
+			frame->setFlags(bmdFrameFlagFlipVertical);
+		}
+		
 		dispatch_async(self.playbackQueue, ^{
 			// the second queue is sending the image data to the device immediately but don't need to wait for next download
 			
