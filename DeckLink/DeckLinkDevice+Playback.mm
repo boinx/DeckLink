@@ -30,8 +30,7 @@
 	if (deckLinkOutput->GetDisplayModeIterator(&displayModeIterator) == S_OK)
 	{
 		BMDPixelFormat pixelFormats[] = {
-		//	bmdFormat8BitARGB, // == kCVPixelFormatType_32ARGB == 32
-			bmdFormat8BitBGRA, // == kCVPixelFormatType_32BGRA 
+			kDeckLinkPrimaryPixelFormat,  
 			bmdFormat8BitYUV, // == kCVPixelFormatType_422YpCbCr8 == '2vuy'
 		};
 		

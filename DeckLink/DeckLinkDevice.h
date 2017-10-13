@@ -1,5 +1,7 @@
 #import <Foundation/Foundation.h>
 
+#define kDeckLinkPrimaryPixelFormat bmdFormat8BitARGB
+
 typedef void(^DeckLinkDeviceStopPlaybackCompletionHandler)(BOOL success, NSError *error);
 
 @interface DeckLinkDevice : NSObject

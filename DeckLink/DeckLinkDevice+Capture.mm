@@ -7,7 +7,6 @@
 #import "DeckLinkDeviceInternalInputCallback.h"
 #import "DeckLinkVideoConnection+Internal.h"
 
-
 static void * const CaptureQueueIdentitiy = (void *)&CaptureQueueIdentitiy;
 
 static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_block_t block)
@@ -51,7 +50,7 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	if (deckLinkInput->GetDisplayModeIterator(&displayModeIterator) == S_OK)
 	{
 		BMDPixelFormat pixelFormats[] = {
-			bmdFormat8BitARGB, // == kCVPixelFormatType_32ARGB == 32
+			kDeckLinkPrimaryPixelFormat, 
 			bmdFormat8BitYUV, // == kCVPixelFormatType_422YpCbCr8 == '2vuy'
 		};
 			
