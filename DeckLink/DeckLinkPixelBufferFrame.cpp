@@ -4,6 +4,7 @@
 DeckLinkPixelBufferFrame::DeckLinkPixelBufferFrame(CVPixelBufferRef pixelBuffer) :
 pixelBuffer(pixelBuffer),
 locked(false),
+frameFlags(bmdFrameFlagDefault),
 refCount(1)
 {
 	CFRetain(pixelBuffer);
@@ -41,7 +42,7 @@ BMDPixelFormat DeckLinkPixelBufferFrame::GetPixelFormat(void)
 
 BMDFrameFlags DeckLinkPixelBufferFrame::GetFlags(void)
 {
-	return bmdFrameFlagDefault;
+	return frameFlags;
 }
 
 HRESULT DeckLinkPixelBufferFrame::GetBytes(void **buffer)
@@ -96,6 +97,13 @@ HRESULT DeckLinkPixelBufferFrame::QueryInterface(REFIID iid, LPVOID *ppv)
 	}
 	
 	return E_NOINTERFACE;
+}
+
+
+void DeckLinkPixelBufferFrame::setFlags(BMDFrameFlags flag)
+{
+	frameFlags = flag;
+	
 }
 
 ULONG DeckLinkPixelBufferFrame::AddRef(void)
