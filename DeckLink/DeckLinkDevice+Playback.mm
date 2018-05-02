@@ -408,7 +408,7 @@
 	});
 }
 
-- (void)playbackContinuousAudioBufferList:(AudioBufferList *)audioBufferList numberOfSamples:(UInt32)numberOfSamples completionHandler:(void(^)())completionHandler
+- (void)playbackContinuousAudioBufferList:(AudioBufferList *)audioBufferList numberOfSamples:(UInt32)numberOfSamples completionHandler:(void(^)(void))completionHandler
 {
 	dispatch_async(self.playbackQueue, ^{
 		uint32_t outNumberOfSamples = 0;
