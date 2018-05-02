@@ -21,6 +21,10 @@
 
 @implementation DeckLinkDevice
 
+// The getter for the read-only \c frameBufferCount must not be synthesized but will instead by provided by a category.
+// Otherwise, the synthesized method and the category method would clash at runtime.
+@dynamic frameBufferCount;
+
 @synthesize deckLink = deckLink;
 
 - (instancetype)initWithDeckLink:(IDeckLink *)deckLink_
