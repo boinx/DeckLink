@@ -37,6 +37,10 @@
     #endif
 #endif
 
+#ifndef BMD_PUBLIC
+	#define BMD_PUBLIC
+#endif
+
 // Type Declarations
 
 typedef int64_t BMDTimeValue;
@@ -97,7 +101,7 @@ class IDeckLinkTimecode;
 
 /* Interface IDeckLinkTimecode - Used for video frame timecode representation. */
 
-class IDeckLinkTimecode : public IUnknown
+class BMD_PUBLIC IDeckLinkTimecode : public IUnknown
 {
 public:
     virtual BMDTimecodeBCD GetBCD (void) = 0;

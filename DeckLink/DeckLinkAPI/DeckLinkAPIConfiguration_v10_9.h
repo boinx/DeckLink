@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2015 Blackmagic Design
+** Copyright (c) 2017 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -25,23 +25,23 @@
 ** -LICENSE-END-
 */
 
-#ifndef BMD_DECKLINKAPICONFIGURATION_v10_4_H
-#define BMD_DECKLINKAPICONFIGURATION_v10_4_H
+#ifndef BMD_DECKLINKAPICONFIGURATION_v10_9_H
+#define BMD_DECKLINKAPICONFIGURATION_v10_9_H
 
 #include "DeckLinkAPIConfiguration.h"
 
 // Interface ID Declarations
 
-BMD_CONST REFIID IID_IDeckLinkConfiguration_v10_4                       = /* 1E69FCF6-4203-4936-8076-2A9F4CFD50CB */ {0x1E,0x69,0xFC,0xF6,0x42,0x03,0x49,0x36,0x80,0x76,0x2A,0x9F,0x4C,0xFD,0x50,0xCB};
+BMD_CONST REFIID IID_IDeckLinkConfiguration_v10_9                       = /* CB71734A-FE37-4E8D-8E13-802133A1C3F2 */ {0xCB,0x71,0x73,0x4A,0xFE,0x37,0x4E,0x8D,0x8E,0x13,0x80,0x21,0x33,0xA1,0xC3,0xF2};
 
 //
 // Forward Declarations
 
-class IDeckLinkConfiguration_v10_4;
+class IDeckLinkConfiguration_v10_9;
 
-/* Interface IDeckLinkConfiguration_v10_4 - DeckLink Configuration interface */
+/* Interface IDeckLinkConfiguration_v10_9 - DeckLink Configuration interface */
 
-class IDeckLinkConfiguration_v10_4 : public IUnknown
+class IDeckLinkConfiguration_v10_9 : public IUnknown
 {
 public:
     virtual HRESULT SetFlag (/* in */ BMDDeckLinkConfigurationID cfgID, /* in */ bool value) = 0;
@@ -55,8 +55,8 @@ public:
     virtual HRESULT WriteConfigurationToPreferences (void) = 0;
 
 protected:
-    virtual ~IDeckLinkConfiguration_v10_4 () {} // call Release method to drop reference count
+    virtual ~IDeckLinkConfiguration_v10_9 () {} // call Release method to drop reference count
 };
 
 
-#endif /* defined(BMD_DECKLINKAPICONFIGURATION_v10_4_H) */
+#endif /* defined(BMD_DECKLINKAPICONFIGURATION_v10_9_H) */

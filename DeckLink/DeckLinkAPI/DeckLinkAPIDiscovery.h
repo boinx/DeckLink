@@ -37,6 +37,10 @@
     #endif
 #endif
 
+#ifndef BMD_PUBLIC
+	#define BMD_PUBLIC
+#endif
+
 // Type Declarations
 
 
@@ -50,7 +54,7 @@ class IDeckLink;
 
 /* Interface IDeckLink - represents a DeckLink device */
 
-class IDeckLink : public IUnknown
+class BMD_PUBLIC IDeckLink : public IUnknown
 {
 public:
     virtual HRESULT GetModelName (/* out */ CFStringRef *modelName) = 0;
