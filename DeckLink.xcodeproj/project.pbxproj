@@ -414,11 +414,11 @@
 			};
 			buildConfigurationList = 5061E93E1B164177003552DE /* Build configuration list for PBXProject "DeckLink" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				English,
+				Base,
 			);
 			mainGroup = 5061E93A1B164177003552DE;
 			productRefGroup = 5061E9451B164177003552DE /* Products */;
