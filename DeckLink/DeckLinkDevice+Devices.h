@@ -1,6 +1,6 @@
 #import <DeckLink/DeckLink.h>
 
-#import "DeckLinkDeviceIODirection.h"
+#import <DeckLink/DeckLinkDeviceIODirection.h>
 
 
 @interface DeckLinkDevice (Devices)

@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-#import "DeckLinkDeviceIODirection.h"
+#import <DeckLink/DeckLinkDeviceIODirection.h>
 
 
 extern NSString * const DeckLinkDeviceBrowserDidAddDeviceNotification;

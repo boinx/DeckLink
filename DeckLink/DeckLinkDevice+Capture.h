@@ -1,4 +1,4 @@
-#import "DeckLink.h"
+#import <DeckLink/DeckLink.h>
 
 #import <CoreMedia/CoreMedia.h>
 
