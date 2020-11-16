@@ -608,6 +608,7 @@
 		5061E95B1B164177003552DE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = x86_64;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEFINES_MODULE = YES;
@@ -628,6 +629,7 @@
 		5061E95C1B164177003552DE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = x86_64;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEFINES_MODULE = YES;
@@ -648,6 +650,7 @@
 		5061E95E1B164177003552DE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = x86_64;
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
@@ -667,6 +670,7 @@
 		5061E95F1B164177003552DE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = x86_64;
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
