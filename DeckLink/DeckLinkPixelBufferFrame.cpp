@@ -1,5 +1,6 @@
 #include "DeckLinkPixelBufferFrame.h"
 
+#include <stdatomic.h>
 
 DeckLinkPixelBufferFrame::DeckLinkPixelBufferFrame(CVPixelBufferRef pixelBuffer) :
 pixelBuffer(pixelBuffer),
@@ -108,12 +109,12 @@ void DeckLinkPixelBufferFrame::setFlags(BMDFrameFlags flag)
 
 ULONG DeckLinkPixelBufferFrame::AddRef(void)
 {
-	return OSAtomicIncrement32(&refCount);
+	return atomic_fetch_add_explicit(&refCount, 1, memory_order_relaxed);
 }
 
 ULONG DeckLinkPixelBufferFrame::Release(void)
 {
-	int32_t newRefValue = OSAtomicDecrement32(&refCount);
+	int32_t newRefValue = atomic_fetch_add_explicit(&refCount, -1, memory_order_relaxed);
 	if(newRefValue == 0)
 	{
 		delete this;

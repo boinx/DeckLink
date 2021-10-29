@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 
 #import "DeckLinkAPI.h"
+#include <stdatomic.h>
 
 // internal use only!
 
@@ -29,5 +30,5 @@ public:
 	
 private:
 	id<DeckLinkDeviceBrowserInternalCallbackDelegate> delegate;
-	int32_t refCount;
+	atomic_int refCount;
 };

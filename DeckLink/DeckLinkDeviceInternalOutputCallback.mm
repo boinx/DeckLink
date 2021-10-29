@@ -1,5 +1,6 @@
 #import "DeckLinkDeviceInternalOutputCallback.h"
 
+#include <stdatomic.h>
 
 DeckLinkDeviceInternalOutputCallback::DeckLinkDeviceInternalOutputCallback(id<DeckLinkDeviceInternalOutputCallbackDelegate> delegate) :
 delegate(delegate),
@@ -65,12 +66,12 @@ HRESULT DeckLinkDeviceInternalOutputCallback::QueryInterface(REFIID iid, LPVOID 
 
 ULONG DeckLinkDeviceInternalOutputCallback::AddRef(void)
 {
-	return OSAtomicIncrement32(&refCount);
+	return atomic_fetch_add_explicit(&refCount, 1, memory_order_relaxed);
 }
 
 ULONG DeckLinkDeviceInternalOutputCallback::Release(void)
 {
-	int32_t newRefValue = OSAtomicDecrement32(&refCount);
+	int32_t newRefValue = atomic_fetch_add_explicit(&refCount, -1, memory_order_relaxed);
 	if(newRefValue == 0)
 	{
 		delete this;
