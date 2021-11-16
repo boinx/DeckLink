@@ -66,12 +66,14 @@ HRESULT DeckLinkDeviceInternalOutputCallback::QueryInterface(REFIID iid, LPVOID 
 
 ULONG DeckLinkDeviceInternalOutputCallback::AddRef(void)
 {
-	return atomic_fetch_add_explicit(&refCount, 1, memory_order_relaxed);
+	return atomic_fetch_add(&refCount, 1);
 }
 
 ULONG DeckLinkDeviceInternalOutputCallback::Release(void)
 {
-	int32_t newRefValue = atomic_fetch_add_explicit(&refCount, -1, memory_order_relaxed);
+	int32_t oldRefValue = atomic_fetch_add(&refCount, -1);	// Note: atomic_fetch_add() returns the previous value
+	int32_t newRefValue = oldRefValue - 1;
+	
 	if(newRefValue == 0)
 	{
 		delete this;

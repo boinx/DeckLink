@@ -335,6 +335,9 @@
 	atomic_fetch_add(&_sampleBufferCount_BackingStore, 1);
 	
 	CFRetain(pixelBuffer);
+	
+	// TODO: Potential problem with CPU/GPU overload!!! this needs to be guarded by a semaphore with inital count of 2 or more!
+	
 	dispatch_async(self.frameDownloadQueue, ^{
 		// The first queue just downloads the frame from GPU to CPU RAM even if the playbackQueue is sending out data to the device.
 		
