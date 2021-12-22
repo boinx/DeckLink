@@ -26,6 +26,8 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 
 - (void)setupCapture
 {
+	self.videoCaptureSemaphore = dispatch_semaphore_create(3);	// we want to be a maximum of 3 video frames behind
+
 	if(deckLink->QueryInterface(IID_IDeckLinkInput, (void **)&deckLinkInput) != S_OK)
 	{
 		return;
@@ -525,23 +527,15 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 
 - (void)didReceiveVideoFrame:(IDeckLinkVideoInputFrame *)videoFrame audioPacket:(IDeckLinkAudioInputPacket *)audioPacket
 {
-	if (videoFrame != NULL)
-	{
-		videoFrame->AddRef();
-	}
-	
 	if (audioPacket != NULL)
 	{
 		audioPacket->AddRef();
-	}
-	
-	dispatch_async(self.captureQueue, ^{
-		if(audioPacket != NULL)
-		{
-            // Work around a bug that causes the sample count to be provided in an
-            // unsigned representation of the signed negative value of the number of audio samples
-            int32_t sampleCount = (int32_t)audioPacket->GetSampleFrameCount();
-            sampleCount = abs(sampleCount);
+
+		dispatch_async(self.captureQueue, ^{
+			// Work around a bug that causes the sample count to be provided in an
+			// unsigned representation of the signed negative value of the number of audio samples
+			int32_t sampleCount = (int32_t)audioPacket->GetSampleFrameCount();
+			sampleCount = abs(sampleCount);
 			
 			CMAudioFormatDescriptionRef formatDescription = self.captureActiveAudioFormatDescription;
 			
@@ -603,135 +597,182 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 					}
 				}
 			}
-			
+						
 			audioPacket->Release();
-		}
-		
-		if(videoFrame != NULL)
-		{
-			CMVideoFormatDescriptionRef videoFormatDescription = self.captureActiveVideoFormatDescription;
-			
-			CMTime frameRate = CMTimeMake(0, 60000);
-			CMVideoFormatDescriptionGetDeckLinkFrameRate(videoFormatDescription, &frameRate);
-			
-			BMDTimeScale frameScale = frameRate.timescale;
-			BMDTimeValue frameTime = 0;
-			BMDTimeValue frameDuration = 0;
-			videoFrame->GetStreamTime(&frameTime, &frameDuration, frameRate.timescale);
-			
-#if 0
-			// TODO: become kCMIOSampleBufferAttachmentKey_HostTime?
-			BMDTimeValue hardwareTime = 0;
-			BMDTimeValue hardwareDuration = 0;
-			videoFrame->GetHardwareReferenceTimestamp(NSEC_PER_SEC, &hardwareTime, &hardwareDuration);
-#endif
+		});
+
+	}
+
+	if (videoFrame != NULL)
+	{
+		videoFrame->AddRef();
 	
-			CMPixelFormatType pixelFormat = videoFrame->GetPixelFormat();
-			long width = videoFrame->GetWidth();
-			long height = videoFrame->GetHeight();
-			long rowBytes = videoFrame->GetRowBytes();
-			
-			BMDFrameFlags flags = videoFrame->GetFlags();
-			
-			BOOL captureInputSourceConnected = (flags & bmdFrameHasNoInputSource) != 0;
-			if (self.captureInputSourceConnected != captureInputSourceConnected)
-			{
-				self.captureInputSourceConnected = captureInputSourceConnected;
-			}
-			
-			void *inputBuffer = NULL;
-			videoFrame->GetBytes(&inputBuffer);
-			
-			CVPixelBufferPoolRef pixelBufferPool = self.capturePixelBufferPool;
-			if(pixelBufferPool == nil)
-			{
-				NSDictionary *pixelBufferAttributes = @{
-					(__bridge NSString *)kCVPixelBufferPixelFormatTypeKey: @(pixelFormat),
-					(__bridge NSString *)kCVPixelBufferWidthKey: @(width),
-					(__bridge NSString *)kCVPixelBufferHeightKey: @(height),
-					(__bridge NSString *)kCVPixelBufferBytesPerRowAlignmentKey: @(rowBytes),
-					(__bridge NSString *)kCVPixelBufferOpenGLCompatibilityKey: @YES,
-					(__bridge NSString *)kCVPixelBufferIOSurfacePropertiesKey: @{
-						(__bridge NSString *)kCVPixelBufferIOSurfaceOpenGLTextureCompatibilityKey: @YES,
-					},
-				};
+		dispatch_semaphore_t videoCaptureSemaphore = self.videoCaptureSemaphore;
+		if (dispatch_semaphore_wait(videoCaptureSemaphore, DISPATCH_TIME_NOW) == 0)
+		{
+
+			dispatch_async(self.captureQueue, ^{
+				BOOL shouldReportDroppedFrame = NO;
 				
-				NSDictionary *poolAttributes = @{
-					(__bridge NSString *)kCVPixelBufferPoolMinimumBufferCountKey: @(4),
-				};
+				CMVideoFormatDescriptionRef videoFormatDescription = self.captureActiveVideoFormatDescription;
+					
+				CMTime frameRate = CMTimeMake(0, 60000);
+				CMVideoFormatDescriptionGetDeckLinkFrameRate(videoFormatDescription, &frameRate);
 				
-				CVReturn status = CVPixelBufferPoolCreate(NULL, (__bridge CFDictionaryRef)poolAttributes, (__bridge CFDictionaryRef)pixelBufferAttributes, &pixelBufferPool);
-				if(status != kCVReturnSuccess)
+				BMDTimeScale frameScale = frameRate.timescale;
+				BMDTimeValue frameTime = 0;
+				BMDTimeValue frameDuration = 0;
+				videoFrame->GetStreamTime(&frameTime, &frameDuration, frameRate.timescale);
+				
+		#if 0
+				// TODO: become kCMIOSampleBufferAttachmentKey_HostTime?
+				BMDTimeValue hardwareTime = 0;
+				BMDTimeValue hardwareDuration = 0;
+				videoFrame->GetHardwareReferenceTimestamp(NSEC_PER_SEC, &hardwareTime, &hardwareDuration);
+		#endif
+				long height = videoFrame->GetHeight();
+				long rowBytes = videoFrame->GetRowBytes();
+				
+				BMDFrameFlags flags = videoFrame->GetFlags();
+				
+				BOOL captureInputSourceConnected = (flags & bmdFrameHasNoInputSource) != 0;
+				if (self.captureInputSourceConnected != captureInputSourceConnected)
 				{
-					return;
+					self.captureInputSourceConnected = captureInputSourceConnected;
 				}
 				
-				self.capturePixelBufferPool = pixelBufferPool;
-				CFRelease(pixelBufferPool);
-			}
-			
-			CVPixelBufferRef pixelBuffer = NULL;
-			const CVReturn pixelBufferStatus = CVPixelBufferPoolCreatePixelBuffer(NULL, pixelBufferPool, &pixelBuffer);
-			if(pixelBufferStatus != kCVReturnSuccess)
-			{
-				return;
-			}
-			
-			CVPixelBufferLockBaseAddress(pixelBuffer, 0);
-			
-			void *outputBuffer = CVPixelBufferGetBaseAddress(pixelBuffer);
-			memcpy(outputBuffer, inputBuffer, rowBytes * height); // We are copying the whole frame each iteration, there must be a better way. CPU => CPU => GPU
-			
-			CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
-			
-			CMVideoFormatDescriptionRef formatDescription = NULL;
-			CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &formatDescription);
-			
-			CMSampleTimingInfo timingInfo = { CMTimeMake(frameDuration, (CMTimeScale)frameScale), CMTimeMake(frameTime, (CMTimeScale)frameScale), kCMTimeInvalid };
-			
-			CMSampleBufferRef sampleBuffer = NULL;
-			OSStatus status = CMSampleBufferCreateForImageBuffer(NULL, pixelBuffer, YES, NULL, NULL, formatDescription, &timingInfo, &sampleBuffer);
-			if(status == noErr)
-			{
-				id<DeckLinkDeviceCaptureVideoDelegate> delegate = self.captureVideoDelegate;
-				dispatch_queue_t queue = self.captureVideoDelegateQueue;
-				if(delegate != nil && queue != nil)
+				void *inputBuffer = NULL;
+				videoFrame->GetBytes(&inputBuffer);
+				
+				CVPixelBufferPoolRef pixelBufferPool = [self getPixelBufferPoolForVideoFrame:videoFrame];
+				if(pixelBufferPool == nil)
 				{
-					dispatch_async(queue, ^{
-						if([delegate respondsToSelector:@selector(DeckLinkDevice:didCaptureVideoSampleBuffer:)])
+					// something bad is going on: can't create a pixel buffer pool
+					shouldReportDroppedFrame = YES;
+				}
+				
+				CVPixelBufferRef pixelBuffer = NULL;
+				if(shouldReportDroppedFrame == NO)
+				{
+					const CVReturn pixelBufferStatus = CVPixelBufferPoolCreatePixelBuffer(NULL, pixelBufferPool, &pixelBuffer);
+					if(pixelBufferStatus != kCVReturnSuccess || pixelBuffer == nil)
+					{
+						// can't create a pixel buffer...
+						shouldReportDroppedFrame = YES;
+					}
+				}
+				
+				if(shouldReportDroppedFrame == NO)
+				{
+					CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+					
+					void *outputBuffer = CVPixelBufferGetBaseAddress(pixelBuffer);
+					memcpy(outputBuffer, inputBuffer, rowBytes * height); // We are copying the whole frame each iteration, there must be a better way. CPU => CPU => GPU
+					
+					CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+					
+					CMVideoFormatDescriptionRef formatDescription = NULL;
+					CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &formatDescription);
+					
+					CMSampleTimingInfo timingInfo = { CMTimeMake(frameDuration, (CMTimeScale)frameScale), CMTimeMake(frameTime, (CMTimeScale)frameScale), kCMTimeInvalid };
+					
+					CMSampleBufferRef sampleBuffer = NULL;
+					OSStatus status = CMSampleBufferCreateForImageBuffer(NULL, pixelBuffer, YES, NULL, NULL, formatDescription, &timingInfo, &sampleBuffer);
+					if(status == noErr)
+					{
+						id<DeckLinkDeviceCaptureVideoDelegate> delegate = self.captureVideoDelegate;
+						dispatch_queue_t queue = self.captureVideoDelegateQueue;
+						if(delegate != nil && queue != nil)
 						{
-							[delegate DeckLinkDevice:self didCaptureVideoSampleBuffer:sampleBuffer];
+							dispatch_async(queue, ^{
+								if([delegate respondsToSelector:@selector(DeckLinkDevice:didCaptureVideoSampleBuffer:)])
+								{
+									[delegate DeckLinkDevice:self didCaptureVideoSampleBuffer:sampleBuffer];
+								}
+								CFRelease(sampleBuffer);
+							});
 						}
-						CFRelease(sampleBuffer);
-					});
+						else
+						{
+							CFRelease(sampleBuffer);
+						}
+					}
+					
+					CVPixelBufferRelease(pixelBuffer);
+					CFRelease(formatDescription);
 				}
-				else
+				
+				if(shouldReportDroppedFrame)
 				{
-					CFRelease(sampleBuffer);
+					[self reportFrameDropToDelegate];
 				}
-			}
-			
-			CVPixelBufferRelease(pixelBuffer);
-			CFRelease(formatDescription);
-			
-			videoFrame->Release();
+				
+				videoFrame->Release();
+
+				dispatch_semaphore_signal(videoCaptureSemaphore);
+			});
 		}
 		else
 		{
-			// TODO: is this assumption right?
-			id<DeckLinkDeviceCaptureVideoDelegate> delegate = self.captureVideoDelegate;
-			dispatch_queue_t queue = self.captureVideoDelegateQueue;
-			if(delegate != nil && queue != nil)
-			{
-				dispatch_async(queue, ^{
-					if([delegate respondsToSelector:@selector(DeckLinkDevice:didDropVideoSampleBuffer:)])
-					{
-						[delegate DeckLinkDevice:self didDropVideoSampleBuffer:NULL];
-					}
-				});
-			}
+			// we are currently to slow to process more video frames, so report a frame drop
+			[self reportFrameDropToDelegate];
 		}
-	});
+	}
+}
+
+- (CVPixelBufferPoolRef)getPixelBufferPoolForVideoFrame:(IDeckLinkVideoInputFrame *)videoFrame
+{
+	CVPixelBufferPoolRef pixelBufferPool = self.capturePixelBufferPool;
+	if(pixelBufferPool == nil)
+	{
+		// if there is no pixel buffer pool yet, create it!
+	
+		CMPixelFormatType pixelFormat = videoFrame->GetPixelFormat();
+		long width = videoFrame->GetWidth();
+		long height = videoFrame->GetHeight();
+		long rowBytes = videoFrame->GetRowBytes();
+
+		NSDictionary *pixelBufferAttributes = @{
+			(__bridge NSString *)kCVPixelBufferPixelFormatTypeKey: @(pixelFormat),
+			(__bridge NSString *)kCVPixelBufferWidthKey: @(width),
+			(__bridge NSString *)kCVPixelBufferHeightKey: @(height),
+			(__bridge NSString *)kCVPixelBufferBytesPerRowAlignmentKey: @(rowBytes),
+			(__bridge NSString *)kCVPixelBufferOpenGLCompatibilityKey: @YES,
+			(__bridge NSString *)kCVPixelBufferIOSurfacePropertiesKey: @{
+				(__bridge NSString *)kCVPixelBufferIOSurfaceOpenGLTextureCompatibilityKey: @YES,
+			},
+		};
+		
+		NSDictionary *poolAttributes = @{
+			(__bridge NSString *)kCVPixelBufferPoolMinimumBufferCountKey: @(4),
+		};
+		
+		CVReturn status = CVPixelBufferPoolCreate(NULL, (__bridge CFDictionaryRef)poolAttributes, (__bridge CFDictionaryRef)pixelBufferAttributes, &pixelBufferPool);
+		if(status != kCVReturnSuccess)
+		{
+			return nil;
+		}
+		
+		self.capturePixelBufferPool = pixelBufferPool;
+		CFRelease(pixelBufferPool);
+	}
+	
+	return pixelBufferPool;
+}
+
+- (void)reportFrameDropToDelegate
+{
+	id<DeckLinkDeviceCaptureVideoDelegate> delegate = self.captureVideoDelegate;
+	dispatch_queue_t queue = self.captureVideoDelegateQueue;
+	if(delegate != nil && queue != nil)
+	{
+		dispatch_async(queue, ^{
+			if([delegate respondsToSelector:@selector(DeckLinkDevice:didDropVideoSampleBuffer:)])
+			{
+				[delegate DeckLinkDevice:self didDropVideoSampleBuffer:NULL];
+			}
+		});
+	}
 }
 
 - (void)didChangeVideoFormat:(BMDVideoInputFormatChangedEvents)changes displayMode:(IDeckLinkDisplayMode *)displayMode flags:(BMDDetectedVideoInputFormatFlags)flags

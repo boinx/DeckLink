@@ -14,4 +14,6 @@ typedef void(^DeckLinkDeviceStopPlaybackCompletionHandler)(BOOL success, NSError
 
 @property (atomic, assign, readonly) NSUInteger frameBufferCount;
 
+@property (atomic, strong) dispatch_semaphore_t videoCaptureSemaphore;
+
 @end
