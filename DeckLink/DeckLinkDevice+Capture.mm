@@ -107,7 +107,7 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 			{
 				[formatDescriptions addObject:(__bridge id)formatDescription];
 				
-				CFRelease(formatDescriptions);
+				CFRelease(formatDescription);
 			}
 		}
 			
@@ -127,7 +127,7 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 			{
 				[formatDescriptions addObject:(__bridge id)formatDescription];
 				
-				CFRelease(formatDescriptions);
+				CFRelease(formatDescription);
 			}
 		}
 			
