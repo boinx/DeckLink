@@ -675,6 +675,10 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 					
 					CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
 					
+					CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+					CVBufferSetAttachment(pixelBuffer, kCVImageBufferCGColorSpaceKey, colorSpace, kCVAttachmentMode_ShouldPropagate);
+					CGColorSpaceRelease(colorSpace);
+					
 					CMVideoFormatDescriptionRef formatDescription = NULL;
 					CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &formatDescription);
 					
