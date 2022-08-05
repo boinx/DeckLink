@@ -24,8 +24,8 @@
 	IDeckLink *deckLink = NULL;
 	while (iterator->Next(&deckLink) == S_OK)
 	{
-		IDeckLinkAttributes *deckLinkAttributes = NULL;
-		if (deckLink->QueryInterface(IID_IDeckLinkAttributes, (void **)&deckLinkAttributes) != S_OK)
+		IDeckLinkProfileAttributes *deckLinkAttributes = NULL;
+		if (deckLink->QueryInterface(IID_IDeckLinkProfileAttributes, (void **)&deckLinkAttributes) != S_OK)
 		{
 			continue;
 		}

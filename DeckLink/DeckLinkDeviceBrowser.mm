@@ -157,8 +157,8 @@ NSString * const DeckLinkDeviceBrowserDeviceKey = @"device";
 {
 	DeckLinkDeviceIODirection direction = self.direction;
 	
-	IDeckLinkAttributes *deckLinkAttributes = NULL;
-	if (deckLink->QueryInterface(IID_IDeckLinkAttributes, (void **)&deckLinkAttributes) != S_OK)
+	IDeckLinkProfileAttributes *deckLinkAttributes = NULL;
+	if (deckLink->QueryInterface(IID_IDeckLinkProfileAttributes, (void **)&deckLinkAttributes) != S_OK)
 	{
 		return;
 	}

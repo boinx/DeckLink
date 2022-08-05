@@ -67,11 +67,15 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 			{
 				BMDPixelFormat pixelFormat = pixelFormats[index];
 					
-				BMDDisplayModeSupport support = bmdDisplayModeNotSupported;
-				if (deckLinkInput->DoesSupportVideoMode(displayModeKey, pixelFormat, bmdVideoOutputFlagDefault, &support, NULL) == S_OK && support != bmdDisplayModeNotSupported)
+//				BMDDisplayMode requestedMode;
+				bool supported = false;
+//				if (deckLinkInput->DoesSupportVideoMode(displayModeKey, pixelFormat, bmdVideoOutputFlagDefault, &support, NULL) == S_OK && support != bmdDisplayModeNotSupported)
+				
+				if (deckLinkInput->DoesSupportVideoMode (0 /*BMDVideoConnection*/, displayModeKey, pixelFormat, bmdNoVideoOutputConversion, bmdSupportedVideoModeDefault, nil, &supported) == S_OK && supported)
+
 				{
 					CMVideoFormatDescriptionRef formatDescription = NULL;
-					if(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, support == bmdDisplayModeSupported, &formatDescription) == noErr)
+					if(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, supported, &formatDescription) == noErr)
 					{
 						[formatDescriptions addObject:(__bridge id)formatDescription];
 						CFRelease(formatDescription);
@@ -187,15 +191,18 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 		}
 		else
 		{
-			deckLinkInput->PauseStreams();
-			HRESULT status = deckLinkInput->DisableVideoInput();
-			if (status != S_OK)
+			if (deckLinkInput != nil)
 			{
 				deckLinkInput->PauseStreams();
-				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-				return;
+				HRESULT status = deckLinkInput->DisableVideoInput();
+				if (status != S_OK)
+				{
+					deckLinkInput->PauseStreams();
+					error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+					return;
+				}
+				deckLinkInput->PauseStreams();
 			}
-			deckLinkInput->PauseStreams();
 		}
 		
 		self.captureActiveVideoFormatDescription = formatDescription;
@@ -450,8 +457,11 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	__block NSError *error = nil;
 	CaptureQueue_dispatch_sync(self.captureQueue, ^{
         
-        deckLinkInput->StopStreams();
-        
+		if(deckLinkInput != nil)
+		{
+			deckLinkInput->StopStreams();
+		}
+		
         self.captureInputSourceConnected = NO;
         self.captureActive = NO;
         

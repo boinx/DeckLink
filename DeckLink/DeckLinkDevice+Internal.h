@@ -11,7 +11,7 @@
 @interface DeckLinkDevice ()
 {
 	IDeckLink *deckLink;
-	IDeckLinkAttributes *deckLinkAttributes;
+	IDeckLinkProfileAttributes *deckLinkAttributes;
 	IDeckLinkConfiguration *deckLinkConfiguration;
 	IDeckLinkKeyer *deckLinkKeyer;
 	IDeckLinkInput *deckLinkInput;

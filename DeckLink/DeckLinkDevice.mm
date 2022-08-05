@@ -37,7 +37,7 @@
 		deckLink = deckLink_;
 		deckLink->AddRef();
 		
-		if (deckLink->QueryInterface(IID_IDeckLinkAttributes, (void **)&deckLinkAttributes) != S_OK)
+		if (deckLink->QueryInterface(IID_IDeckLinkProfileAttributes, (void **)&deckLinkAttributes) != S_OK)
 		{
 			return nil;
 		}

@@ -45,11 +45,11 @@
 			{
 				BMDPixelFormat pixelFormat = pixelFormats[index];
 				
-				BMDDisplayModeSupport support = bmdDisplayModeNotSupported;
-				if (deckLinkOutput->DoesSupportVideoMode(displayModeKey, pixelFormat, bmdVideoOutputFlagDefault, &support, NULL) == S_OK && support != bmdDisplayModeNotSupported)
+				bool supported = false;
+				if (deckLinkOutput->DoesSupportVideoMode(0 /*BMDVideoConnection*/, displayModeKey, pixelFormat, bmdNoVideoOutputConversion, bmdSupportedVideoModeDefault, nil, &supported) == S_OK && supported)
 				{
 					CMVideoFormatDescriptionRef formatDescription = NULL;
-					if(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, support == bmdDisplayModeSupported, &formatDescription) == noErr)
+					if(CMVideoFormatDescriptionCreateWithDeckLinkDisplayMode(displayMode, pixelFormat, supported, &formatDescription) == noErr)
 					{
 						[formatDescriptions addObject:(__bridge id)formatDescription];
 						CFRelease(formatDescription);
@@ -116,25 +116,18 @@
 		
 		[keyingModes addObject:DeckLinkKeyingModeNone];
 		
-		bool supportsHDKeying = false;
-		deckLinkAttributes->GetFlag(BMDDeckLinkSupportsHDKeying, &supportsHDKeying);
-		if (supportsHDKeying)
+		bool supportsInternalKeying = false;
+		deckLinkAttributes->GetFlag(BMDDeckLinkSupportsInternalKeying, &supportsInternalKeying);
+		if (supportsInternalKeying)
 		{
-			// Nobody cares for non HD-keying anymore
-			
-			bool supportsInternalKeying = false;
-			deckLinkAttributes->GetFlag(BMDDeckLinkSupportsInternalKeying, &supportsInternalKeying);
-			if (supportsInternalKeying)
-			{
-				[keyingModes addObject:DeckLinkKeyingModeInternal];
-			}
-			
-			bool supportsExternalKeying = false;
-			deckLinkAttributes->GetFlag(BMDDeckLinkSupportsExternalKeying, &supportsExternalKeying);
-			if (supportsExternalKeying)
-			{
-				[keyingModes addObject:DeckLinkKeyingModeExternal];
-			}
+			[keyingModes addObject:DeckLinkKeyingModeInternal];
+		}
+		
+		bool supportsExternalKeying = false;
+		deckLinkAttributes->GetFlag(BMDDeckLinkSupportsExternalKeying, &supportsExternalKeying);
+		if (supportsExternalKeying)
+		{
+			[keyingModes addObject:DeckLinkKeyingModeExternal];
 		}
 
 		self.playbackKeyingModes = keyingModes;
