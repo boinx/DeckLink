@@ -26,7 +26,11 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 
 - (void)setupCapture
 {
-	self.videoCaptureSemaphore = dispatch_semaphore_create(3);	// we want to be a maximum of 3 video frames behind
+	// we want to be a maximum of 3 video frames behind
+	self.videoCaptureSemaphore = dispatch_semaphore_create(0);
+	dispatch_semaphore_signal(self.videoCaptureSemaphore);	// init with "3" (dispatch_semaphore_create(3) may crash on deallocation)
+	dispatch_semaphore_signal(self.videoCaptureSemaphore);
+	dispatch_semaphore_signal(self.videoCaptureSemaphore);
 
 	if(deckLink->QueryInterface(IID_IDeckLinkInput, (void **)&deckLinkInput) != S_OK)
 	{
