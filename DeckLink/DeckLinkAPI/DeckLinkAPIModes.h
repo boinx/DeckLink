@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2022 Blackmagic Design
+** Copyright (c) 2020 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -282,8 +282,6 @@ extern "C" {
 
 
 }
-
-
 
 #endif /* defined(__cplusplus) */
 #endif /* defined(BMD_DECKLINKAPIMODES_H) */

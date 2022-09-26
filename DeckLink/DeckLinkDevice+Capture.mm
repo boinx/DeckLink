@@ -545,8 +545,11 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 
 - (void)didReceiveVideoFrame:(IDeckLinkVideoInputFrame *)videoFrame audioPacket:(IDeckLinkAudioInputPacket *)audioPacket
 {
+	NSLog(@"%f",(double)CVGetCurrentHostTime()/ CVGetHostClockFrequency());
+
 	if (audioPacket != NULL)
 	{
+
 		audioPacket->AddRef();
 
 		dispatch_async(self.captureQueue, ^{
