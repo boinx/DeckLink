@@ -36,6 +36,7 @@
 // capture
 
 @property (atomic, assign) BOOL captureSupported;
+@property (atomic, assign) BOOL synchronizeToCaptureGroupSupported;
 @property (atomic, assign) BOOL captureActive;
 @property (atomic, assign) BOOL captureInputSourceConnected;
 

@@ -76,6 +76,12 @@
 			self.topologicalID = (int32_t)topologicalID;
 		}
 		
+		bool supportsSynchronizeToCaptureGroup = NO;
+		if(deckLinkAttributes->GetFlag(BMDDeckLinkSupportsSynchronizeToCaptureGroup, &supportsSynchronizeToCaptureGroup) == S_OK)
+		{
+			self.synchronizeToCaptureGroupSupported = (BOOL)supportsSynchronizeToCaptureGroup;
+		}
+
 		[self setupCapture];
 		[self setupPlayback];
 	}
