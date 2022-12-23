@@ -56,6 +56,10 @@
 
 - (void)setCaptureAudioDelegate:(id<DeckLinkDeviceCaptureAudioDelegate>)delegate queue:(dispatch_queue_t)queue;
 
+- (BOOL)setCaptureGroupID:(int64_t)captureGroupID;
+- (int64_t)captureGroupID;
+- (void)resetCaptureGroup;
+
 - (BOOL)startCaptureWithError:(NSError **)error;
 - (void)stopCapture;
 

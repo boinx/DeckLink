@@ -541,6 +541,70 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	});
 }
 
+#pragma mark - Capture Synchronisation
+
+- (BOOL)setCaptureGroupID:(int64_t)captureGroupID
+{
+	// Note: BMD documentation says that setting a capture group on a device will remain until a system reboot.
+	
+	BOOL success = NO;
+	
+	if(self.synchronizeToCaptureGroupSupported)
+	{
+		HRESULT result;
+		IDeckLinkConfiguration *deckLinkParentDeviceConfiguration;
+
+		// IDeckLinkConfiguration::SetInt with the bmdDeckLinkConfigCaptureGroup configuration
+		result = deckLink->QueryInterface(IID_IDeckLinkConfiguration, (void **)&deckLinkParentDeviceConfiguration);
+
+		if(result == S_OK)
+		{
+			result = deckLinkParentDeviceConfiguration->SetInt(bmdDeckLinkConfigCaptureGroup, captureGroupID);
+		}
+
+		if(result == S_OK)
+		{
+			success = YES;
+		}
+
+	}
+	
+	return success;
+}
+
+- (int64_t)captureGroupID
+{
+	int64_t captureGroupID = 0;
+	
+	if(self.synchronizeToCaptureGroupSupported)
+	{
+		HRESULT result;
+		IDeckLinkConfiguration *deckLinkParentDeviceConfiguration;
+
+		// IDeckLinkConfiguration::SetInt with the bmdDeckLinkConfigCaptureGroup configuration
+		result = deckLink->QueryInterface(IID_IDeckLinkConfiguration, (void **)&deckLinkParentDeviceConfiguration);
+
+		if(result == S_OK)
+		{
+			result = deckLinkParentDeviceConfiguration->GetInt(bmdDeckLinkConfigCaptureGroup, &captureGroupID);
+		}
+
+		if(result != S_OK)
+		{
+			captureGroupID = 0;
+		}
+
+	}
+
+	return captureGroupID;
+}
+
+- (void)resetCaptureGroup
+{
+	// we assume that a caputre group ID == zero is a "none" capture group
+	[self setCaptureGroupID:0];
+}
+
 #pragma mark - DeckLinkDeviceInternalInputCallbackDelegate
 
 - (void)didReceiveVideoFrame:(IDeckLinkVideoInputFrame *)videoFrame audioPacket:(IDeckLinkAudioInputPacket *)audioPacket
@@ -626,11 +690,11 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 
 	if (videoFrame != NULL)
 	{
-		videoFrame->AddRef();
-	
 		dispatch_semaphore_t videoCaptureSemaphore = self.videoCaptureSemaphore;
 		if (dispatch_semaphore_wait(videoCaptureSemaphore, DISPATCH_TIME_NOW) == 0)
 		{
+
+			videoFrame->AddRef();
 
 			dispatch_async(self.captureQueue, ^{
 				BOOL shouldReportDroppedFrame = NO;
@@ -715,12 +779,18 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 									[delegate DeckLinkDevice:self didCaptureVideoSampleBuffer:sampleBuffer];
 								}
 								CFRelease(sampleBuffer);
+								dispatch_semaphore_signal(videoCaptureSemaphore);
 							});
 						}
 						else
 						{
 							CFRelease(sampleBuffer);
+							dispatch_semaphore_signal(videoCaptureSemaphore);
 						}
+					}
+					else
+					{
+						dispatch_semaphore_signal(videoCaptureSemaphore);
 					}
 					
 					CVPixelBufferRelease(pixelBuffer);
@@ -729,12 +799,14 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 				
 				if(shouldReportDroppedFrame)
 				{
+					dispatch_semaphore_signal(videoCaptureSemaphore);
+
 					[self reportFrameDropToDelegate];
 				}
 				
 				videoFrame->Release();
 
-				dispatch_semaphore_signal(videoCaptureSemaphore);
+//				dispatch_semaphore_signal(videoCaptureSemaphore);
 			});
 		}
 		else
