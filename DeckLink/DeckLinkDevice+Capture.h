@@ -23,6 +23,7 @@
 @interface DeckLinkDevice (Capture)
 
 @property (atomic, assign, readonly) BOOL captureSupported;
+@property (atomic, assign, readonly) BOOL synchronizeToCaptureGroupSupported;
 
 /**
  * Set if the capturing was started.
@@ -59,8 +60,11 @@
 - (BOOL)setCaptureGroupID:(int64_t)captureGroupID;
 - (int64_t)captureGroupID;
 - (void)resetCaptureGroup;
+- (BOOL)isVideoInputSignalLocked;
 
 - (BOOL)startCaptureWithError:(NSError **)error;
+- (BOOL)initializeCaptureWithError:(NSError **)outError;
+- (BOOL)actuallyStartCaptureWithError:(NSError **)outError;
 - (void)stopCapture;
 
 @end

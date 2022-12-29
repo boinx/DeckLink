@@ -16,6 +16,7 @@
 	IDeckLinkKeyer *deckLinkKeyer;
 	IDeckLinkInput *deckLinkInput;
 	IDeckLinkOutput *deckLinkOutput;
+	IDeckLinkStatus *deckLinkStatus;
 	
 	DeckLinkDeviceInternalInputCallback *deckLinkInputCallback;
 	DeckLinkDeviceInternalOutputCallback *deckLinkOutputCallback;

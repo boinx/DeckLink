@@ -431,6 +431,13 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
     {
         flags |= bmdVideoInputEnableFormatDetection;
     }
+	
+	int64_t captureGroupID = self.captureGroupID;
+	NSLog(@"%@ enableVideoInput captureGroupID:%i",self,(int)captureGroupID);
+	if(captureGroupID > 0)
+	{
+		flags |= bmdVideoInputSynchronizeToCaptureGroup;
+	}
     
     HRESULT status = deckLinkInput->EnableVideoInput(displayMode, pixelFormat, flags);
 
@@ -458,55 +465,14 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 - (BOOL)startCaptureWithError:(NSError **)outError
 {
 	__block BOOL result = NO;
-	__block NSError *error = nil;
-	CaptureQueue_dispatch_sync(self.captureQueue, ^{
-        
-		if(deckLinkInput != nil)
-		{
-			deckLinkInput->StopStreams();
-		}
-		
-        self.captureInputSourceConnected = NO;
-        self.captureActive = NO;
-        
-        if (self.captureActiveVideoFormatDescription)
-        {
-            HRESULT status = [self enableVideoInputWithVideoFormatDescription:self.captureActiveVideoFormatDescription];
-            if (status != S_OK)
-            {
-                error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-                return;
-            }
-            
-            result = YES;
-        }
-        
-        if (self.captureActiveAudioFormatDescription)
-        {
-            HRESULT status = [self enableAudioInputWithAudioFormatDescription:self.captureActiveAudioFormatDescription];
-            if (status != S_OK)
-            {
-                error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-                return;
-            }
-            
-            result = YES;
-        }
-        
-        if (result)
-        {
-            HRESULT status = deckLinkInput->StartStreams();
-            if (status != S_OK)
-            {
-                error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-                return;
-            }
-            
-            self.captureInputSourceConnected = YES; // We assume an input source is connected when start capturing
-            self.captureActive = YES;
-        }
-		
-	});
+	NSError *error = nil;
+	
+	[self initializeCaptureWithError:&error];
+	
+	if (error == nil)
+	{
+		[self actuallyStartCaptureWithError:&error];
+	}
 	
 	if (error != nil)
 	{
@@ -521,6 +487,99 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 			NSLog(@"%s:%d: %@", __FUNCTION__, __LINE__, error);
 		}
 	}
+	
+	return result;
+}
+
+- (BOOL)initializeCaptureWithError:(NSError **)outError
+{
+	__block BOOL result = NO;
+	__block NSError *error = nil;
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
+		
+		if(deckLinkInput != nil)
+		{
+			deckLinkInput->StopStreams();
+		}
+		
+		self.captureInputSourceConnected = NO;
+		self.captureActive = NO;
+		
+		if (self.captureActiveVideoFormatDescription)
+		{
+			HRESULT status = [self enableVideoInputWithVideoFormatDescription:self.captureActiveVideoFormatDescription];
+			if (status != S_OK)
+			{
+				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+				return;
+			}
+			
+			result = YES;
+		}
+		
+		if (self.captureActiveAudioFormatDescription)
+		{
+			HRESULT status = [self enableAudioInputWithAudioFormatDescription:self.captureActiveAudioFormatDescription];
+			if (status != S_OK)
+			{
+				error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+				return;
+			}
+			
+			result = YES;
+		}
+	});
+		
+	if (error != nil)
+	{
+		result = NO;
+		
+		if (outError != NULL)
+		{
+			*outError = error;
+		}
+		else
+		{
+			NSLog(@"%s:%d: %@", __FUNCTION__, __LINE__, error);
+		}
+	}
+
+	return result;
+}
+
+- (BOOL)actuallyStartCaptureWithError:(NSError **)outError
+{
+	__block BOOL result = NO;
+	__block NSError *error = nil;
+	CaptureQueue_dispatch_sync(self.captureQueue, ^{
+		
+		HRESULT status = deckLinkInput->StartStreams();
+		if (status != S_OK)
+		{
+			error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+			
+			return;
+		}
+		
+		self.captureInputSourceConnected = YES; // We assume an input source is connected when start capturing
+		self.captureActive = YES;
+		
+	});
+	
+	if (error != nil)
+	{
+		result = NO;
+		
+		if (outError != NULL)
+		{
+			*outError = error;
+		}
+		else
+		{
+			NSLog(@"%s:%d: %@", __FUNCTION__, __LINE__, error);
+		}
+	}
+	
 	return result;
 }
 
@@ -601,8 +660,25 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 
 - (void)resetCaptureGroup
 {
-	// we assume that a caputre group ID == zero is a "none" capture group
+	// we assume that a capture group ID == zero is a "none" capture group
 	[self setCaptureGroupID:0];
+}
+
+- (BOOL)isVideoInputSignalLocked
+{
+	BOOL result = NO;
+	
+	if(deckLinkStatus)
+	{
+		bool isVideoInputSignalLocked = false;
+		HRESULT success = deckLinkStatus->GetFlag(bmdDeckLinkStatusVideoInputSignalLocked, &isVideoInputSignalLocked);
+		if (success == S_OK)
+		{
+			result = isVideoInputSignalLocked;
+		}
+	}
+
+	return result;
 }
 
 #pragma mark - DeckLinkDeviceInternalInputCallbackDelegate

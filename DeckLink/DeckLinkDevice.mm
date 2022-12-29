@@ -47,6 +47,11 @@
 			return nil;
 		}
 		
+		if (deckLink->QueryInterface(IID_IDeckLinkStatus, (void **)&deckLinkStatus) != S_OK)
+		{
+			return nil;
+		}
+		
 		if (deckLink->QueryInterface(IID_IDeckLinkKeyer, (void **)&deckLinkKeyer) != S_OK)
 		{
 			// keyer may be nil

@@ -16,6 +16,4 @@ typedef void(^DeckLinkDeviceStopPlaybackCompletionHandler)(BOOL success, NSError
 
 @property (atomic, strong) dispatch_semaphore_t videoCaptureSemaphore;
 
-@property (atomic, readonly) BOOL synchronizeToCaptureGroupSupported;
-
 @end
