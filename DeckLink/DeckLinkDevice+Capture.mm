@@ -638,14 +638,14 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	if(self.synchronizeToCaptureGroupSupported)
 	{
 		HRESULT result;
-		IDeckLinkConfiguration *deckLinkParentDeviceConfiguration;
+		IDeckLinkConfiguration *deckLinkDeviceConfiguration;
 
 		// IDeckLinkConfiguration::SetInt with the bmdDeckLinkConfigCaptureGroup configuration
-		result = deckLink->QueryInterface(IID_IDeckLinkConfiguration, (void **)&deckLinkParentDeviceConfiguration);
+		result = deckLink->QueryInterface(IID_IDeckLinkConfiguration, (void **)&deckLinkDeviceConfiguration);
 
 		if(result == S_OK)
 		{
-			result = deckLinkParentDeviceConfiguration->GetInt(bmdDeckLinkConfigCaptureGroup, &captureGroupID);
+			result = deckLinkDeviceConfiguration->GetInt(bmdDeckLinkConfigCaptureGroup, &captureGroupID);
 		}
 
 		if(result != S_OK)
