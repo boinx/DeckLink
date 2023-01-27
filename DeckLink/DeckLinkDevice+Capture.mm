@@ -436,7 +436,7 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 	NSLog(@"%@ enableVideoInput captureGroupID:%i",self,(int)captureGroupID);
 	if(captureGroupID > 0)
 	{
-		flags |= bmdVideoInputSynchronizeToCaptureGroup;
+		flags = bmdVideoInputSynchronizeToCaptureGroup;
 	}
     
     HRESULT status = deckLinkInput->EnableVideoInput(displayMode, pixelFormat, flags);
