@@ -911,6 +911,7 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 			(__bridge NSString *)kCVPixelBufferHeightKey: @(height),
 			(__bridge NSString *)kCVPixelBufferBytesPerRowAlignmentKey: @(rowBytes),
 			(__bridge NSString *)kCVPixelBufferOpenGLCompatibilityKey: @YES,
+			(__bridge NSString *)kCVPixelBufferMetalCompatibilityKey: @YES,
 			(__bridge NSString *)kCVPixelBufferIOSurfacePropertiesKey: @{
 				(__bridge NSString *)kCVPixelBufferIOSurfaceOpenGLTextureCompatibilityKey: @YES,
 			},
