@@ -10,3 +10,8 @@ NSString * const DeckLinkAudioConnectionAnalog = @"Analog";
 NSString * const DeckLinkAudioConnectionAnalogXLR = @"Analog XLR";
 
 NSString * const DeckLinkAudioConnectionAnalogRCA = @"Analog RCA";
+
+NSString * const DeckLinkAudioConnectionMicrophone = @"Microphone";
+
+NSString * const DeckLinkAudioConnectionHeadphones = @"Headphones";
+

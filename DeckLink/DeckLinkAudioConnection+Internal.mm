@@ -25,7 +25,15 @@ NSArray *DeckLinkAudioConnectionsFromBMDAudioConnection(BMDAudioConnection audio
 	{
 		[audioConnections addObject:DeckLinkAudioConnectionAnalogRCA];
 	}
-	
+	if (audioConnection & bmdAudioConnectionMicrophone)
+	{
+		[audioConnections addObject:DeckLinkAudioConnectionMicrophone];
+	}
+	if (audioConnection & bmdAudioConnectionHeadphones)
+	{
+		[audioConnections addObject:DeckLinkAudioConnectionHeadphones];
+	}
+
 	return audioConnections;
 }
 
@@ -51,7 +59,15 @@ NSString *DeckLinkAudioConnectionFromBMDAudioConnection(BMDAudioConnection audio
 	{
 		return DeckLinkAudioConnectionAnalogRCA;
 	}
-	
+	if (audioConnection == bmdAudioConnectionMicrophone)
+	{
+		return DeckLinkAudioConnectionMicrophone;
+	}
+	if (audioConnection == bmdAudioConnectionHeadphones)
+	{
+		return DeckLinkAudioConnectionHeadphones;
+	}
+
 	return nil;
 }
 
@@ -77,6 +93,14 @@ BMDAudioConnection DeckLinkAudioConnectionToBMDAudioConnection(NSString *audioCo
 	{
 		return bmdAudioConnectionAnalogRCA;
 	}
-	
+	if ([audioConnection isEqualToString:DeckLinkAudioConnectionMicrophone])
+	{
+		return bmdAudioConnectionMicrophone;
+	}
+	if ([audioConnection isEqualToString:DeckLinkAudioConnectionHeadphones])
+	{
+		return bmdAudioConnectionHeadphones;
+	}
+
 	return 0;
 }

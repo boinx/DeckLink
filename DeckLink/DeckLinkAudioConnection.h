@@ -25,3 +25,13 @@ extern NSString * const DeckLinkAudioConnectionAnalogXLR;
  * @see bmdAudioConnectionAnalogRCA
  */
 extern NSString * const DeckLinkAudioConnectionAnalogRCA;
+
+/**
+ * @see bmdAudioConnectionMicrophone
+ */
+extern NSString * const DeckLinkAudioConnectionMicrophone;
+
+/**
+ * @see bmdAudioConnectionHeadphones
+ */
+extern NSString * const DeckLinkAudioConnectionHeadphones;
