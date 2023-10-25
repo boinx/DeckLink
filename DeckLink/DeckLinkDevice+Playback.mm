@@ -164,6 +164,10 @@
 				return;
 			}
 			
+			// if the output format is 2vuy then we need to convert the frame
+			FourCharCode codecType = CMVideoFormatDescriptionGetCodecType(formatDescription);
+			self.videoFramesRequiresFrameConvertion = (codecType == '2vuy');
+				
 			BMDDisplayMode displayMode = displayModeValue.intValue;
 			BMDVideoOutputFlags flags = bmdVideoOutputFlagDefault;
 			
@@ -340,8 +344,33 @@
 		dispatch_async(self.playbackQueue, ^{
 			// the second queue is sending the image data to the device immediately but don't need to wait for next download
 			
+			DeckLinkPixelBufferFrame *myFrame = frame;
+			
+			if(self.videoFramesRequiresFrameConvertion)
+			{
+				IDeckLinkMutableVideoFrame* conversionFrame;
+				if (deckLinkOutput->CreateVideoFrame((int32_t)frame->GetWidth(),
+													 (int32_t)frame->GetHeight(),
+													 (int32_t)(((frame->GetWidth() + 47) / 48) * 128),
+													 bmdFormat8BitYUV,
+													 frame->GetFlags(),
+													 &conversionFrame) != S_OK)
+					return;
+				
+				if(self.frameConverter == nil)
+				{
+					self.frameConverter = CreateVideoConversionInstance();
+				}
+				
+				if (((IDeckLinkVideoConversion*)self.frameConverter)->ConvertFrame(frame, conversionFrame) != S_OK)
+					return;
+				
+				myFrame->Release();	// release the old frame.
+				myFrame = (DeckLinkPixelBufferFrame*)conversionFrame;	// IMPORTANT: we can cast the pointer because we only need it in the following call ScheduleVideoFrame() which can handle different types of frames.
+			}
+
 			// deckLinkOutput->DisplayVideoFrameSync(frame);
-			deckLinkOutput->ScheduleVideoFrame(frame, displayTime, frameDuration, timeScale);
+			deckLinkOutput->ScheduleVideoFrame(myFrame, displayTime, frameDuration, timeScale);
 			CFRelease(pixelBuffer);
 
 		});
@@ -386,6 +415,29 @@
 		if (flipped) {
 			
 			frame->setFlags(bmdFrameFlagFlipVertical);
+		}
+		
+		if(self.videoFramesRequiresFrameConvertion)
+		{
+			IDeckLinkMutableVideoFrame* conversionFrame;
+			if (deckLinkOutput->CreateVideoFrame((int32_t)frame->GetWidth(),
+												 (int32_t)frame->GetHeight(),
+												 (int32_t)(((frame->GetWidth() + 47) / 48) * 128),
+												 bmdFormat8BitYUV,
+												 frame->GetFlags(),
+												 &conversionFrame) != S_OK)
+				return;
+			
+			if(self.frameConverter == nil)
+			{
+				self.frameConverter = CreateVideoConversionInstance();
+			}
+			
+			if (((IDeckLinkVideoConversion*)self.frameConverter)->ConvertFrame(frame, conversionFrame) != S_OK)
+				return;
+			
+			frame->Release();	// release the old frame.
+			frame = (DeckLinkPixelBufferFrame*)conversionFrame;	// IMPORTANT: we can cast the pointer because we only need it in the following block to call DisplayVideoFrameSync() which can handle different types of frames.
 		}
 		
 		dispatch_async(self.playbackQueue, ^{

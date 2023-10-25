@@ -16,4 +16,7 @@ typedef void(^DeckLinkDeviceStopPlaybackCompletionHandler)(BOOL success, NSError
 
 @property (atomic, strong) dispatch_semaphore_t videoCaptureSemaphore;
 
+@property (assign) void *frameConverter;
+@property (assign) BOOL videoFramesRequiresFrameConvertion;
+
 @end
