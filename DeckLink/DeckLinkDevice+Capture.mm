@@ -836,6 +836,51 @@ static inline void CaptureQueue_dispatch_sync(dispatch_queue_t queue, dispatch_b
 					CVBufferSetAttachment(pixelBuffer, kCVImageBufferCGColorSpaceKey, colorSpace, kCVAttachmentMode_ShouldPropagate);
 					CGColorSpaceRelease(colorSpace);
 					
+					BOOL captureInputSourceConnected = (flags & bmdFrameHasNoInputSource) != 0;
+
+					if(CMFormatDescriptionGetMediaSubType(videoFormatDescription) == kCMPixelFormat_422YpCbCr8)
+					{
+						// Query the IDeckLinkVideoFrameMetadataExtensions interface
+						IDeckLinkVideoFrameMetadataExtensions* metadataExtensions = nullptr;
+						HRESULT result = videoFrame->QueryInterface(IID_IDeckLinkVideoFrameMetadataExtensions, (void**)&metadataExtensions);
+						if (SUCCEEDED(result) && metadataExtensions != nullptr)
+						{
+							int64_t colorSpaceValue;
+							result = metadataExtensions->GetInt(bmdDeckLinkFrameMetadataColorspace, &colorSpaceValue);
+							
+							if (SUCCEEDED(result))
+							{
+								const CFStringRef *yCbCrMatrix = nil;
+								switch(colorSpaceValue)
+								{
+									case bmdColorspaceRec601:
+										yCbCrMatrix = &kCVImageBufferYCbCrMatrix_ITU_R_601_4;
+										break;
+										
+									case bmdColorspaceRec709:
+										yCbCrMatrix = &kCVImageBufferYCbCrMatrix_ITU_R_709_2;
+										break;
+										
+									case bmdColorspaceRec2020:
+										yCbCrMatrix = &kCVImageBufferYCbCrMatrix_ITU_R_2020;
+										break;
+								}
+								if(yCbCrMatrix)
+								{
+									CVBufferSetAttachment(pixelBuffer, kCVImageBufferYCbCrMatrixKey, *yCbCrMatrix, kCVAttachmentMode_ShouldPropagate);
+								}
+								
+							}
+							else
+							{
+								// Handle error in retrieving color space metadata
+							}
+							
+							// Release the metadataExtensions interface
+							metadataExtensions->Release();
+						}
+					}
+
 					CMVideoFormatDescriptionRef formatDescription = NULL;
 					CMVideoFormatDescriptionCreateForImageBuffer(NULL, pixelBuffer, &formatDescription);
 					
