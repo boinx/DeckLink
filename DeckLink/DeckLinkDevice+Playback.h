@@ -13,6 +13,10 @@
 @property (nonatomic, copy, readonly) NSArray *playbackAudioFormatDescriptions;
 @property (atomic, strong, readonly) __attribute__((NSObject)) CMAudioFormatDescriptionRef playbackActiveAudioFormatDescription;
 - (BOOL)setPlaybackActiveAudioFormatDescription:(CMAudioFormatDescriptionRef)formatDescription error:(NSError **)error;
+/// Timestamped audio is played at its stream time on the same timeline as the scheduled video frames (use
+/// schedulePlaybackOfAudioBufferList:…), continuous audio is played in write order (use playbackContinuousAudioBufferList:…).
+- (BOOL)setPlaybackActiveAudioFormatDescription:(CMAudioFormatDescriptionRef)formatDescription timestamped:(BOOL)timestamped error:(NSError **)error;
+@property (atomic, assign, readonly) BOOL playbackAudioTimestamped;
 
 @property (atomic, assign, readonly) BOOL playbackSupported;
 @property (atomic, assign, readonly) BOOL playbackActive;
@@ -28,6 +32,7 @@
 - (void)playbackPixelBuffer:(CVPixelBufferRef)pixelBuffer isFlipped:(BOOL)flipped;
 
 - (void)playbackContinuousAudioBufferList:(AudioBufferList *)audioBufferList numberOfSamples:(UInt32)numberOfSamples completionHandler:(void(^)(void))completionHandler;
+- (void)schedulePlaybackOfAudioBufferList:(AudioBufferList *)audioBufferList numberOfSamples:(UInt32)numberOfSamples streamTime:(int64_t)streamTime timeScale:(int64_t)timeScale completionHandler:(void(^)(void))completionHandler;
 
 #if 0
 

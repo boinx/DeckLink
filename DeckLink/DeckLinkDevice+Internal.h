@@ -80,5 +80,9 @@
 @property (nonatomic, copy) NSArray *playbackKeyingModes;
 @property (atomic, copy) NSString *playbackActiveKeyingMode;
 @property (atomic, assign) float playbackKeyingAlpha;
+@property (atomic, assign) BOOL playbackAudioTimestamped;
+
+/// Measures clock drift between the host and the card during scheduled playback, nil unless switched on by hidden prefs.
+@property (atomic, strong) id playbackTimingMonitor;
 
 @end
